@@ -21,6 +21,9 @@ app.get("/", (req, res) => {
 
 // In-memory store for OAuth state values (temporary)
 const oauthStates = new Set();
+// Temporary token storage - holds the most recent access token for testing
+// Will replace this with real session management later
+let currentAccessToken = null;
 
 // Start the OAuth flow - redirects the user to Figma's authorization page
 app.get("/auth/figma", (req, res) => {
@@ -89,6 +92,7 @@ app.get("/auth/callback", async (req, res) => {
 
     const tokenData = await tokenResponse.json();
     console.log("Token exchange successful. Token type:", tokenData.token_type);
+    currentAccessToken = tokenData.access_token;
 
     // For now, just respond with confirmation (no token leaked to the response)
     res.json({
@@ -102,6 +106,44 @@ app.get("/auth/callback", async (req, res) => {
   }
 });
 
+// Test endpoint — fetches a Figma file's version history.
+// Usage: /api/test-versions/YOUR_FILE_KEY
+app.get("/api/test-versions/:fileKey", async (req, res) => {
+  if (!currentAccessToken) {
+    return res.status(401).json({
+      error:
+        "No access token available. Visit /auth/figma to authenticate first.",
+    });
+  }
+
+  const { fileKey } = req.params;
+
+  try {
+    const figmaResponse = await fetch(
+      `https://api.figma.com/v1/files/${fileKey}/versions`,
+      {
+        headers: {
+          Authorization: `Bearer ${currentAccessToken}`,
+        },
+      },
+    );
+
+    if (!figmaResponse.ok) {
+      const errorText = await figmaResponse.text();
+      console.error("Figma API call failed:", figmaResponse.status, errorText);
+      return res.status(figmaResponse.status).json({
+        error: "Figma API call failed",
+        status: figmaResponse.status,
+      });
+    }
+
+    const versionsData = await figmaResponse.json();
+    res.json(versionsData);
+  } catch (err) {
+    console.error("Error fetching versions:", err);
+    res.status(500).json({ error: "Failed to fetch versions" });
+  }
+});
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
