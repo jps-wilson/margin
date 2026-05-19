@@ -1,16 +1,77 @@
-# React + Vite
+# Margin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application for generating visual and structural diffs between Figma file versions.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Margin is a web application that compares two versions of a Figma file and generates a real, human-readable diff. Instead of manually scanning designs for changes, users can instantly see what was added, removed, moved, resized, or edited between versions.
 
-## React Compiler
+The application generates a scannable changelog with concrete deltas, alongside visual comparison modes including a side-by-side scrubber and an annotated overlay view. Margin is designed to help design teams and developers better understand evolving design systems, collaborative edits, and handoff changes.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Who This Is For
 
-## Expanding the ESLint configuration
+- Studio teams working collaboratively across shared Figma files
+- Developers reviewing updated handoff files
+- Designers tracking iteration changes between versions
+- Teams looking for clearer visibility into design updates
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Features
+
+### Core Features
+
+- Figma OAuth authentication
+- File and version selection
+- Server-side diff engine
+- Detection of:
+  - Added frames
+  - Removed frames
+  - Moved elements
+  - Resized elements
+  - Text content changes
+- Multiple comparison views:
+  - Changelog view
+  - Side-by-side scrubber
+  - Overlay with annotations
+- Shareable URLs for diff sessions
+- Public deployment for external users
+
+## Future Improvements
+
+- Figma API integration
+- AI-assisted comparisons
+- Exportable reports
+- Side-by-side diff viewer
+
+## Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+
+### Backend
+
+- Node.js
+- Express
+
+### Authentication
+
+- Figma OAuth
+
+### Deployment
+
+- Vercel (frontend)
+- Railway or Fly.io (backend)
+
+### Diffing
+
+- Custom server-side diffing logic
+
+### Database
+
+- No database required for v1
+
+### License
+
+© 2026 Margin. All rights reserved. This project is provided for viewing purposes only and may not be copied, modified, or distributed without permission.
