@@ -57,6 +57,7 @@
   border-bottom-color: var(--ember);
 }
 
+/* removed the weird styling of black outline around button */
 button.cta-button {
   cursor: pointer;
   border: none;
@@ -72,4 +73,12 @@ button.cta-button {
 
 .helper-link:hover {
   color: var(--ink);
+}
+
+.paste-error {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--change-removed-fg);
+  margin: 0 0 var(--s-3) 0;
 }
