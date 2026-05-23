@@ -94,12 +94,8 @@ app.get("/auth/callback", async (req, res) => {
     console.log("Token exchange successful. Token type:", tokenData.token_type);
     currentAccessToken = tokenData.access_token;
 
-    // For now, just respond with confirmation (no token leaked to the response)
-    res.json({
-      message: "OAuth complete - access token received",
-      tokenType: tokenData.token_type,
-      expiresIn: tokenData.expires_in,
-    });
+    // Redirect back to the React client
+    res.redirect(`${process.env.CLIENT_URL}/paste`);
   } catch (err) {
     console.error("Token exchange error:", err);
     res.status(500).json({ error: "Token exchange failed" });
