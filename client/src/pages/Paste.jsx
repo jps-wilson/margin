@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Paste.css";
+import PageShell from "../components/PageShell";
+import "./Paste.css";
 
 function Paste() {
   const [url, setUrl] = useState("");
@@ -35,51 +36,42 @@ function Paste() {
   }
 
   return (
-    <main className='paste-page'>
-      <div className='margin-rule' aria-hidden='true' />
+    <PageShell className='paste-page'>
+      <section className='paste-section'>
+        <h1 className='paste-heading'>
+          Paste a <span className='ember'>file URL.</span>
+        </h1>
 
-      <div className='content'>
-        <header className='wordmark-area'>
-          <span className='wordmark'>margin</span>
-          <span className='microcopy'>← notes for files</span>
-        </header>
+        <p className='paste-subhead'>
+          Margin will compare two versions and show what changed.
+        </p>
 
-        <section className='paste-section'>
-          <h1 className='paste-heading'>
-            Paste a <span className='ember'>file URL.</span>
-          </h1>
+        <div className='paste-row'>
+          <input
+            className='paste-input'
+            type='text'
+            placeholder='https://figma.com/design/...'
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit(e);
+            }}
+          />
+          <button className='cta-button' onClick={handleSubmit}>
+            <span>Continue</span>
+            <span className='arrow' aria-hidden='true'>
+              →
+            </span>
+          </button>
+        </div>
 
-          <p className='paste-subhead'>
-            Margin will compare two versions and show what changed.
-          </p>
+        {error && <p className='paste-error'>{error}</p>}
 
-          <div className='paste-row'>
-            <input
-              className='paste-input'
-              type='text'
-              placeholder='https://figma.com/design/...'
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmit(e);
-              }}
-            />
-            <button className='cta-button' onClick={handleSubmit}>
-              <span>Continue</span>
-              <span className='arrow' aria-hidden='true'>
-                →
-              </span>
-            </button>
-          </div>
-
-          {error && <p className='paste-error'>{error}</p>}
-
-          <a className='helper-link' href='#'>
-            how do I find this?
-          </a>
-        </section>
-      </div>
-    </main>
+        <a className='helper-link' href='#'>
+          how do I find this?
+        </a>
+      </section>
+    </PageShell>
   );
 }
 

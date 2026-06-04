@@ -1,40 +1,35 @@
-import "../App.css";
+import "./Landing.css";
+import PageShell from "../components/PageShell";
 
 function Landing() {
   return (
-    <main className='landing'>
-      <div className='margin-rule' aria-hidden='true' />
+    <PageShell className='landing'>
+      <section className='hero'>
+        <h1 className='headline'>
+          What
+          <br />
+          <span className='ember'>changed.</span>
+        </h1>
 
-      <div className='content'>
-        <header className='wordmark-area'>
-          <span className='wordmark'>margin</span>
-          <span className='microcopy'>← notes for files</span>
-        </header>
+        <p className='subhead'>
+          A changelog for Figma files.
+          <br />
+          Pick two versions, get a list you can actually read.
+        </p>
 
-        <section className='hero'>
-          <h1 className='headline'>
-            What
-            <br />
-            <span className='ember'>changed.</span>
-          </h1>
+        <a
+          className='cta-button'
+          href={`${import.meta.env.VITE_API_URL}/auth/figma`}
+        >
+          <span>Connect Figma</span>
+          <span className='arrow' aria-hidden='true'>
+            →
+          </span>
+        </a>
 
-          <p className='subhead'>
-            A changelog for Figma files.
-            <br />
-            Pick two versions, get a list you can actually read.
-          </p>
-
-          <a className='cta-button' href='http://localhost:3000/auth/figma'>
-            <span>Connect Figma</span>
-            <span className='arrow' aria-hidden='true'>
-              →
-            </span>
-          </a>
-
-          <p className='caption'>takes 8 seconds</p>
-        </section>
-      </div>
-    </main>
+        <p className='caption'>takes 8 seconds</p>
+      </section>
+    </PageShell>
   );
 }
 

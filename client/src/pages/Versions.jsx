@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import "../Versions.css";
+import PageShell from "../components/PageShell";
+import { fetchVersions } from "../api";
+import "./Versions.css";
 
 function groupByWeek(versions) {
   const now = new Date();
@@ -49,14 +51,11 @@ function Versions() {
   const [toVersion, setToVersion] = useState(null);
 
   useEffect(() => {
-    async function fetchVersions() {
+    async function loadVersions() {
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/test-versions/${fileKey}`,
-        );
-        if (!res.ok) throw new Error("Failed to fetch versions");
-        const data = await res.json();
+        const data = await fetchVersions(fileKey);
         const versionList = data.versions || [];
+
         setVersions(versionList);
 
         // Default selection: most recent names as "to", second named as "from"
@@ -78,7 +77,7 @@ function Versions() {
       }
     }
 
-    fetchVersions();
+    loadVersions();
   }, [fileKey]);
 
   function handleSelect(version, type) {
@@ -105,125 +104,102 @@ function Versions() {
 
   if (loading) {
     return (
-      <main className='versions-page'>
-        <div className='margin-rule' aria-hidden='true' />
-        <div className='content'>
-          <header className='wordmark-area'>
-            <span className='wordmark'>margin</span>
-            <span className='wordmark'>← notes for files</span>
-          </header>
-          <p className='versions-loading'>Loading versions...</p>
-        </div>
-      </main>
+      <PageShell className='versions-page'>
+        <p className='versions-loading'>Loading versions...</p>
+      </PageShell>
     );
   }
 
   if (error) {
     return (
-      <main className='versions-page'>
-        <div className='margin-rule' aria-hidden='true' />
-        <div className='content'>
-          <header className='wordmark-area'>
-            <span className='wordmark'>margin</span>
-            <span className='microcopy'>← notes for files</span>
-          </header>
-          <p className='versions-error'>{error}</p>
-        </div>
-      </main>
+      <PageShell className='versions-page'>
+        <p className='versions-error'>{error}</p>
+      </PageShell>
     );
   }
 
   return (
-    <main className='versions-page'>
-      <div className='margin-rule' aria-hidden='true' />
+    <PageShell className='versions-page'>
+      <section className='versions-section'>
+        <h1 className='versions-title'>Version History</h1>
+        <p className='versions-meta'>
+          {versions.length} versions · {namedCount} named, {autoSaveCount}{" "}
+          auto-saved
+        </p>
+        <div className='versions-list'>
+          {groups.map((group) => (
+            <div className='version-group' key={group.label}>
+              <span className='group-label'>{group.label}</span>
 
-      <div className='content'>
-        <header className='wordmark-area'>
-          <span className='wordmark'>margin</span>
-          <span className='microcopy'>← notes for files</span>
-        </header>
+              {(namedCount > 0 ? group.named : group.autoSaves).map((v) => {
+                const isTo = toVersion && toVersion.id === v.id;
+                const isFrom = fromVersion && fromVersion.id === v.id;
+                let cardClass = "version-card";
+                if (isTo) cardClass += " version-card--to";
+                if (isFrom) cardClass += " version-card--from";
 
-        <section className='versions-section'>
-          <h1 className='versions-title'>Version History</h1>
-          <p className='versions-meta'>
-            {versions.length} versions · {namedCount} named, {autoSaveCount}{" "}
-            auto-saved
-          </p>
-          <div className='versions-list'>
-            {groups.map((group) => (
-              <div className='version-group' key={group.label}>
-                <span className='group-label'>{group.label}</span>
-
-                {(namedCount > 0 ? group.named : group.autoSaves).map((v) => {
-                  const isTo = toVersion && toVersion.id === v.id;
-                  const isFrom = fromVersion && fromVersion.id === v.id;
-                  let cardClass = "version-card";
-                  if (isTo) cardClass += " version-card--to";
-                  if (isFrom) cardClass += " version-card--from";
-
-                  return (
-                    <div className={cardClass} key={v.id}>
-                      <div className='version-card-top'>
-                        <span className='version-name'>
-                          {v.label || formatDate(v.created_at)}
-                        </span>
-                        {isTo && <span className='badge badge--to'>to</span>}
-                        {isFrom && (
-                          <span className='badge badge--from'>from</span>
-                        )}
-                        {!isTo && !isFrom && (
-                          <span className='version-actions'>
-                            <button
-                              className='select-btn'
-                              onClick={() => handleSelect(v, "from")}
-                            >
-                              from
-                            </button>
-                            <button
-                              className='select-btn'
-                              onClick={() => handleSelect(v, "to")}
-                            >
-                              to
-                            </button>
-                          </span>
-                        )}
-                      </div>
-                      <span className='version-sub'>
-                        {formatDate(v.created_at)} · by{" "}
-                        {v.user?.handle || "Unknown"}
+                return (
+                  <div className={cardClass} key={v.id}>
+                    <div className='version-card-top'>
+                      <span className='version-name'>
+                        {v.label || formatDate(v.created_at)}
                       </span>
+                      {isTo && <span className='badge badge--to'>to</span>}
+                      {isFrom && (
+                        <span className='badge badge--from'>from</span>
+                      )}
+                      {!isTo && !isFrom && (
+                        <span className='version-actions'>
+                          <button
+                            className='select-btn'
+                            onClick={() => handleSelect(v, "from")}
+                          >
+                            from
+                          </button>
+                          <button
+                            className='select-btn'
+                            onClick={() => handleSelect(v, "to")}
+                          >
+                            to
+                          </button>
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
+                    <span className='version-sub'>
+                      {formatDate(v.created_at)} · by{" "}
+                      {v.user?.handle || "Unknown"}
+                    </span>
+                  </div>
+                );
+              })}
 
-                {namedCount > 0 && group.autoSaves.length > 0 && (
-                  <span className='autosave-count'>
-                    + {group.autoSaves.length} auto-save
-                    {group.autoSaves.length !== 1 ? "s" : ""}{" "}
-                    {group.label.toLowerCase()}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {fromVersion && toVersion && (
-            <div className='versions-footer'>
-              <button className='cta-button' onClick={handleContinue}>
-                <span>Continue</span>
-                <span className='arrow' aria-hidden='true'>
-                  →
+              {namedCount > 0 && group.autoSaves.length > 0 && (
+                <span className='autosave-count'>
+                  + {group.autoSaves.length} auto-save
+                  {group.autoSaves.length !== 1 ? "s" : ""}{" "}
+                  {group.label.toLowerCase()}
                 </span>
-              </button>
-              <span className='versions-caption'>
-                {fromVersion.label || formatDate(fromVersion.created_at)} →{" "}
-                {toVersion.label || formatDate(toVersion.created_at)}
-              </span>
+              )}
             </div>
-          )}
-        </section>
-      </div>
-    </main>
+          ))}
+        </div>
+
+        {fromVersion && toVersion && (
+          <div className='versions-footer'>
+            <button className='cta-button' onClick={handleContinue}>
+              <span>Continue</span>
+              <span className='arrow' aria-hidden='true'>
+                →
+              </span>
+            </button>
+            <span className='versions-caption'>
+              {fromVersion.label || formatDate(fromVersion.created_at)} →{" "}
+              {toVersion.label || formatDate(toVersion.created_at)}
+            </span>
+          </div>
+        )}
+      </section>
+    </PageShell>
   );
 }
 

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import "../Changelog.css";
+import PageShell from "../components/PageShell";
+import { fetchDiff } from "../api";
+import "./Changelog.css";
 
 const BADGE_LABELS = {
   added: "added",
@@ -22,13 +24,9 @@ function Changelog() {
   const [activeTab, setActiveTab] = useState("changelog");
 
   useEffect(() => {
-    async function fetchDiff() {
+    async function loadDiff() {
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/diff/${fileKey}?from=${from}&to=${to}`,
-        );
-        if (!res.ok) throw new Error("Failed to fetch diff");
-        const result = await res.json();
+        const result = await fetchDiff(fileKey, from, to);
         setData(result);
       } catch (err) {
         setError(err.message);
@@ -37,121 +35,98 @@ function Changelog() {
       }
     }
 
-    if (from && to) fetchDiff();
+    if (from && to) loadDiff();
   }, [fileKey, from, to]);
 
   if (loading) {
     return (
-      <main className='changelog-page'>
-        <div className='margin-rule' aria-hidden='true' />
-        <div className='content'>
-          <header className='wordmark-area'>
-            <span className='wordmark'>margin</span>
-            <span className='microcopy'>← notes for files</span>
-          </header>
-          <p className='changelog-loading'>Comparing versions...</p>
-        </div>
-      </main>
+      <PageShell className='changelog-page'>
+        <p className='changelog-loading'>Comparing versions...</p>
+      </PageShell>
     );
   }
 
   if (error) {
     return (
-      <main className='changelog-page'>
-        <div className='margin-rule' aria-hidden='true' />
-        <div className='content'>
-          <header className='wordmark-area'>
-            <span className='wordmark'>margin</span>
-            <span className='microcopy'>← notes for files</span>
-          </header>
-          <p className='changelog-error'>{error}</p>
-        </div>
-      </main>
+      <PageShell className='changelog-page'>
+        <p className='changelog-error'>{error}</p>
+      </PageShell>
     );
   }
 
   return (
-    <main className='changelog-page'>
-      <div className='margin-rule' aria-hidden='true' />
+    <PageShell className='changelog-page'>
+      <section className='changelog-section'>
+        <h1 className='changelog-title'>Changelog</h1>
+        <p className='changelog-meta'>
+          {data.totalChanges} change{data.totalChanges !== 1 ? "s" : ""}{" "}
+          detected
+        </p>
 
-      <div className='content'>
-        <header className='wordmark-area'>
-          <span className='wordmark'>margin</span>
-          <span className='microcopy'>← notes for files</span>
-        </header>
+        <div className='tab-row'>
+          <button
+            className={`tab ${activeTab === "changelog" ? "tab--active" : ""}`}
+            onClick={() => setActiveTab("changelog")}
+          >
+            Changelog
+          </button>
+          <button
+            className={`tab ${activeTab === "scrubber" ? "tab--active" : ""}`}
+            onClick={() => setActiveTab("scrubber")}
+          >
+            Scrubber
+          </button>
+          <button
+            className={`tab ${activeTab === "overlay" ? "tab--active" : ""}`}
+            onClick={() => setActiveTab("overlay")}
+          >
+            Overlay
+          </button>
+        </div>
 
-        <section className='changelog-section'>
-          <h1 className='changelog-title'>Changelog</h1>
-          <p className='changelog-meta'>
-            {data.totalChanges} change{data.totalChanges !== 1 ? "s" : ""}{" "}
-            detected
-          </p>
+        {activeTab === "changelog" && (
+          <div className='changelog-list'>
+            {data.sections.map((section) => (
+              <div className='changelog-group' key={section.name}>
+                <h2 className='section-title'>{section.name}</h2>
+                <span className='section-meta'>
+                  {section.changes.length} change
+                  {section.changes.length !== 1 ? "s" : ""}
+                </span>
 
-          <div className='tab-row'>
-            <button
-              className={`tab ${activeTab === "changelog" ? "tab--active" : ""}`}
-              onClick={() => setActiveTab("changelog")}
-            >
-              Changelog
-            </button>
-            <button
-              className={`tab ${activeTab === "scrubber" ? "tab--active" : ""}`}
-              onClick={() => setActiveTab("scrubber")}
-            >
-              Scrubber
-            </button>
-            <button
-              className={`tab ${activeTab === "overlay" ? "tab--active" : ""}`}
-              onClick={() => setActiveTab("overlay")}
-            >
-              Overlay
-            </button>
-          </div>
-
-          {activeTab === "changelog" && (
-            <div className='changelog-list'>
-              {data.sections.map((section) => (
-                <div className='changelog-group' key={section.name}>
-                  <h2 className='section-title'>{section.name}</h2>
-                  <span className='section-meta'>
-                    {section.changes.length} change
-                    {section.changes.length !== 1 ? "s" : ""}
-                  </span>
-
-                  <div className='change-rows'>
-                    {section.changes.map((change, i) => (
-                      <div className='change-row' key={i}>
-                        <span
-                          className={`change-badge change-badge--${change.type}`}
-                        >
-                          {BADGE_LABELS[change.type]}
-                        </span>
-                        <div className='change-info'>
-                          <span className='change-name'>{change.name}</span>
-                          <span className='change-delta'>{change.delta}</span>
-                        </div>
+                <div className='change-rows'>
+                  {section.changes.map((change, i) => (
+                    <div className='change-row' key={i}>
+                      <span
+                        className={`change-badge change-badge--${change.type}`}
+                      >
+                        {BADGE_LABELS[change.type]}
+                      </span>
+                      <div className='change-info'>
+                        <span className='change-name'>{change.name}</span>
+                        <span className='change-delta'>{change.delta}</span>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
 
-          {activeTab === "scrubber" && (
-            <div className='tab-placeholder'>
-              <p className='placeholder-text'>Scrubber view coming soon.</p>
-            </div>
-          )}
+        {activeTab === "scrubber" && (
+          <div className='tab-placeholder'>
+            <p className='placeholder-text'>Scrubber view coming soon.</p>
+          </div>
+        )}
 
-          {activeTab === "overlay" && (
-            <div className='tab-placeholder'>
-              <p className='placeholder-text'>Overlay view coming soon.</p>
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+        {activeTab === "overlay" && (
+          <div className='tab-placeholder'>
+            <p className='placeholder-text'>Overlay view coming soon.</p>
+          </div>
+        )}
+      </section>
+    </PageShell>
   );
 }
 
