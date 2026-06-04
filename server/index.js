@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import { diff } from "./diff.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -140,6 +141,57 @@ app.get("/api/test-versions/:fileKey", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch versions" });
   }
 });
+
+app.get("/api/diff/:fileKey", async (req, res) => {
+  if (!currentAccessToken) {
+    return res.status(401).json({
+      error:
+        "No access token available. Visit /auth/figma to authenticate first.",
+    });
+  }
+
+  const { fileKey } = req.params;
+  const { from, to } = req.query;
+
+  if (!from || !to) {
+    return res
+      .status(400)
+      .json({ error: "Missing 'from' and 'to' version IDs" });
+  }
+
+  try {
+    // Fetch both versions in parallel
+    const [fromRes, toRes] = await Promise.all([
+      fetch(`https://api.figma.com/v1/files/${fileKey}?version=${from}`, {
+        headers: { Authorization: `Bearer ${currentAccessToken}` },
+      }),
+      fetch(`https://api.figma.com/v1/files/${fileKey}?version=${to}`, {
+        headers: { Authorization: `Bearer ${currentAccessToken}` },
+      }),
+    ]);
+
+    if (!fromRes.ok || !toRes.ok) {
+      console.error("Figma API error:", fromRes.status, toRes.status);
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch file versions from Figma" });
+    }
+
+    const [fromFile, toFile] = await Promise.all([
+      fromRes.json(),
+      toRes.json(),
+    ]);
+
+    // Run the diff
+    const result = diff(fromFile, toFile);
+
+    res.json(result);
+  } catch (err) {
+    console.error("Diff error:", err);
+    res.status(500).json({ error: "Diff failed" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
