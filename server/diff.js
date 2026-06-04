@@ -153,11 +153,7 @@ function groupByFrame(changes, fromMap) {
       // find the frame's node ID from the map
       let frameId = null;
       for (const [id, node] of fromMap) {
-        if (
-          node.name === frame &&
-          node.type === "FRAME" &&
-          node.parentFrame === null
-        ) {
+        if (node.name === frame && node.type === "FRAME") {
           frameId = id;
           break;
         }

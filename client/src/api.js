@@ -12,3 +12,12 @@ export async function fetchDiff(fileKey, from, to) {
   if (!res.ok) throw new Error("Failed to fetch diff");
   return res.json();
 }
+
+export async function fetchFrameImage(fileKey, nodeId, version) {
+  const res = await fetch(
+    `${BASE}/api/frame-image/${fileKey}/${nodeId}?version=${version}`,
+  );
+  if (!res.ok) throw new Error("failed to fetch frame image");
+  const data = await res.json();
+  return data.imageUrl;
+}

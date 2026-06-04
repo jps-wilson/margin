@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import PageShell from "../components/PageShell";
+import Scrubber from "../components/Scrubber";
 import { fetchDiff } from "../api";
 import "./Changelog.css";
 
@@ -115,9 +116,12 @@ function Changelog() {
         )}
 
         {activeTab === "scrubber" && (
-          <div className='tab-placeholder'>
-            <p className='placeholder-text'>Scrubber view coming soon.</p>
-          </div>
+          <Scrubber
+            fileKey={fileKey}
+            from={from}
+            to={to}
+            sections={data.sections}
+          />
         )}
 
         {activeTab === "overlay" && (
