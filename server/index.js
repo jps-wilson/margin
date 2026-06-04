@@ -192,6 +192,39 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 });
 
+// Frame image endpoint — renders a specific Figma node as a PNG.
+// Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
+app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
+  if (!currentAccessToken) {
+    return res.status(401).json({ error: "No access token available." });
+  }
+
+  const { fileKey, nodeId } = req.params;
+  const { version } = req.query;
+
+  try {
+    const url = `https://api.figma.com/v1/images/${fileKey}?ids=${nodeId}&format=png&scale=2${version ? `&version=${version}` : ""}`;
+
+    const figmaRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${currentAccessToken}` },
+    });
+
+    if (!figmaRes.ok) {
+      const errorText = await figmaRes.text();
+      console.error("Figma image API error:", figmaRes.status, errorText);
+      return res.status(500).json({ error: "Failed to fetch frame image" });
+    }
+
+    const data = await figmaRes.json();
+    const imageUrl = data.images?.[nodeId] || null;
+
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error("Frame image error:", err);
+    res.status(500).json({ error: "Failed to fetch frame image" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

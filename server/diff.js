@@ -144,15 +144,27 @@ function truncate(str, max = 20) {
 /**
  * Group a flat list of changes by their parent frame.
  */
-function groupByFrame(changes) {
+function groupByFrame(changes, fromMap) {
   const frameMap = new Map();
 
   for (const change of changes) {
     const frame = change.parentFrame || "Other";
     if (!frameMap.has(frame)) {
-      frameMap.set(frame, []);
+      // find the frame's node ID from the map
+      let frameId = null;
+      for (const [id, node] of fromMap) {
+        if (
+          node.name === frame &&
+          node.type === "FRAME" &&
+          node.parentFrame === null
+        ) {
+          frameId = id;
+          break;
+        }
+      }
+      frameMap.set(frame, { id: frameId, changes: [] });
     }
-    frameMap.get(frame).push({
+    frameMap.get(frame).changes.push({
       type: change.type,
       name: change.name,
       delta: change.delta,
@@ -160,8 +172,8 @@ function groupByFrame(changes) {
   }
 
   const sections = [];
-  for (const [name, changes] of frameMap) {
-    sections.push({ name, changes });
+  for (const [name, data] of frameMap) {
+    sections.push({ name, id: data.id, changes: data.changes });
   }
 
   return sections;
@@ -187,7 +199,7 @@ export function diff(fromFile, toFile) {
   }
 
   const changes = compareNodes(fromMap, toMap);
-  const sections = groupByFrame(changes);
+  const sections = groupByFrame(changes, fromMap);
 
   return {
     totalChanges: changes.length,
