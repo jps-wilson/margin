@@ -1,0 +1,197 @@
+/* ============================================================
+   Margin — changelog page
+   ============================================================ */
+
+.changelog-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.changelog-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.changelog-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 var(--s-1) 0;
+}
+
+.changelog-meta {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  margin: 0 0 var(--s-5) 0;
+}
+
+.changelog-loading {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--mid);
+}
+
+.changelog-error {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--change-removed-fg);
+}
+
+/* Tabs */
+
+.tab-row {
+  display: flex;
+  gap: var(--s-5);
+  padding-bottom: var(--s-3);
+  border-bottom: 0.5px solid var(--faint);
+  margin-bottom: var(--s-6);
+  width: 100%;
+  max-width: 720px;
+}
+
+.tab {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--mid);
+  background: none;
+  border: none;
+  padding: 0 0 var(--s-3) 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab--active {
+  color: var(--ink);
+}
+
+.tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: calc(-1 * var(--s-3));
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ember);
+}
+
+/* Change list */
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+  max-width: 720px;
+  width: 100%;
+}
+
+.changelog-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--ink);
+  margin: 0 0 var(--s-1) 0;
+}
+
+.section-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  margin-bottom: var(--s-4);
+}
+
+/* Individual change rows */
+
+.change-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.change-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+}
+
+.change-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: center;
+  margin-top: 3px;
+}
+
+.change-badge--added {
+  background: var(--change-added-bg);
+  color: var(--change-added-fg);
+}
+
+.change-badge--removed {
+  background: var(--change-removed-bg);
+  color: var(--change-removed-fg);
+}
+
+.change-badge--moved {
+  background: var(--change-moved-bg);
+  color: var(--change-moved-fg);
+}
+
+.change-badge--resized {
+  background: var(--change-resized-bg);
+  color: var(--change-resized-fg);
+}
+
+.change-badge--text {
+  background: var(--change-text-bg);
+  color: var(--change-text-fg);
+}
+
+.change-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.change-name {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.change-delta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
+
+/* Placeholder tabs */
+
+.tab-placeholder {
+  padding: var(--s-9) 0;
+}
+
+.placeholder-text {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--mid);
+}
