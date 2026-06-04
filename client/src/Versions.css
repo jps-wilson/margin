@@ -1,0 +1,181 @@
+/* ============================================================
+   Margin — versions page
+   ============================================================ */
+
+.versions-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.versions-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.versions-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 var(--s-1) 0;
+}
+
+.versions-meta {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  margin: 0 0 var(--s-6) 0;
+}
+
+.versions-loading {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--mid);
+}
+
+.versions-error {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--change-removed-fg);
+}
+
+/* Version groups */
+
+.versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  max-width: 720px;
+  width: 100%;
+}
+
+.version-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.group-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+}
+
+/* Version cards */
+
+.version-card {
+  padding: var(--s-3) var(--s-4);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.version-card--to {
+  background: #faeeda;
+}
+
+.version-card--from {
+  background: rgba(26, 23, 20, 0.04);
+}
+
+.version-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.version-name {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.version-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
+
+/* Badges */
+
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.badge--to {
+  background: var(--ember);
+  color: var(--paper);
+}
+
+.badge--from {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Select buttons (shown on unselected cards) */
+
+.version-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.select-btn {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  background: rgba(26, 23, 20, 0.06);
+  color: var(--mid);
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.select-btn:hover {
+  background: rgba(26, 23, 20, 0.12);
+  color: var(--ink);
+}
+
+/* Auto-save count */
+
+.autosave-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  padding-left: var(--s-4);
+}
+
+/* Footer */
+
+.versions-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  margin-top: var(--s-6);
+}
+
+.versions-caption {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
