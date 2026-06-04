@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import PageShell from "../components/PageShell";
 import Scrubber from "../components/Scrubber";
+import Overlay from "../components/Overlay";
 import { fetchDiff } from "../api";
 import "./Changelog.css";
 
@@ -125,9 +126,12 @@ function Changelog() {
         )}
 
         {activeTab === "overlay" && (
-          <div className='tab-placeholder'>
-            <p className='placeholder-text'>Overlay view coming soon.</p>
-          </div>
+          <Overlay
+            fileKey={fileKey}
+            from={from}
+            to={to}
+            sections={data.sections}
+          />
         )}
       </section>
     </PageShell>

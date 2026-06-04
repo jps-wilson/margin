@@ -203,7 +203,7 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   const { version } = req.query;
 
   try {
-    const url = `https://api.figma.com/v1/images/${fileKey}?ids=${nodeId}&format=png&scale=2${version ? `&version=${version}` : ""}`;
+    const url = `https://api.figma.com/v1/images/${fileKey}?ids=${nodeId}&format=png&scale=1${version ? `&version=${version}` : ""}`;
 
     const figmaRes = await fetch(url, {
       headers: { Authorization: `Bearer ${currentAccessToken}` },

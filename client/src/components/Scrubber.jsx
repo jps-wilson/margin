@@ -14,10 +14,9 @@ function Scrubber({ fileKey, from, to, sections }) {
   useEffect(() => {
     if (!selectedFrame) return;
 
-    setFromImage(null);
-    setToImage(null);
-
     async function loadImages() {
+      setFromImage(null);
+      setToImage(null);
       try {
         const [fromUrl, toUrl] = await Promise.all([
           fetchFrameImage(fileKey, selectedFrame.id, from),
