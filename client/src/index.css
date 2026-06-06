@@ -68,3 +68,97 @@ body {
 p {
   margin: 0;
 }
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ============================================================
+   Shared layout
+   ============================================================ */
+
+.margin-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 96px;
+  width: 2px;
+  background: var(--ember);
+  opacity: 0.55;
+}
+
+.content {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--s-9) var(--s-9) var(--s-9) calc(96px + var(--s-6));
+}
+
+/* Wordmark */
+.wordmark-area {
+  margin-bottom: 140px;
+}
+
+.wordmark-link {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-5);
+  text-decoration: none;
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.microcopy {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ember);
+}
+
+/* Navigation */
+.back-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: var(--s-5);
+}
+
+.back-link:hover {
+  color: var(--ink);
+}
+
+/* CTA Button */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 14px 26px;
+  background: var(--ember);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.cta-button:hover {
+  background: #b8492a;
+}
+
+.cta-button .arrow {
+  font-family: var(--serif);
+  font-size: 15px;
+}

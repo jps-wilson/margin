@@ -123,7 +123,11 @@ function Versions() {
   }
 
   return (
-    <PageShell className='versions-page'>
+    <PageShell
+      className='versions-page'
+      backTo='/paste'
+      backLabel='paste a URL'
+    >
       <section className='versions-section'>
         <h1 className='versions-title'>{fileName || "Version History"}</h1>
         <p className='versions-meta'>

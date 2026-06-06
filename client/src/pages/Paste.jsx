@@ -36,7 +36,7 @@ function Paste() {
   }
 
   return (
-    <PageShell className='paste-page'>
+    <PageShell className='paste-page' backTo='/' backLabel='home'>
       <section className='paste-section'>
         <h1 className='paste-heading'>
           Paste a <span className='ember'>file URL.</span>

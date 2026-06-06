@@ -117,7 +117,7 @@
 .change-rows {
   display: flex;
   flex-direction: column;
-  gap: var(--s-3);
+  gap: var(--s-4);
 }
 
 .change-row {
@@ -128,13 +128,13 @@
 
 .change-badge {
   display: inline-block;
-  padding: 2px 7px;
+  padding: 3px 10px;
   border-radius: 3px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
-  min-width: 60px;
+  min-width: 68px;
   text-align: center;
   margin-top: 3px;
 }
@@ -172,16 +172,16 @@
 
 .change-name {
   font-family: var(--serif);
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--ink);
 }
 
 .change-delta {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
-  color: var(--mid);
+  color: var(--stone);
 }
 
 /* Placeholder tabs */

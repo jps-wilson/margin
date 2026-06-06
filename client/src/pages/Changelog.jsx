@@ -57,7 +57,11 @@ function Changelog() {
   }
 
   return (
-    <PageShell className='changelog-page'>
+    <PageShell
+      className='changelog-page'
+      backTo={`/versions/${fileKey}`}
+      backLabel='versions'
+    >
       <section className='changelog-section'>
         <h1 className='changelog-title'>{data.fileName}</h1>
         <p className='changelog-meta'>
