@@ -59,10 +59,12 @@ function Changelog() {
   return (
     <PageShell className='changelog-page'>
       <section className='changelog-section'>
-        <h1 className='changelog-title'>Changelog</h1>
+        <h1 className='changelog-title'>{data.fileName}</h1>
         <p className='changelog-meta'>
-          {data.totalChanges} change{data.totalChanges !== 1 ? "s" : ""}{" "}
-          detected
+          {data.fromDate && data.toDate
+            ? `${new Date(data.fromDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} → ${new Date(data.toDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · `
+            : ""}
+          {data.totalChanges} change{data.totalChanges !== 1 ? "s" : ""}
         </p>
 
         <div className='tab-row'>

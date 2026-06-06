@@ -21,3 +21,9 @@ export async function fetchFrameImage(fileKey, nodeId, version) {
   const data = await res.json();
   return data.imageUrl;
 }
+
+export async function fetchFileInfo(fileKey) {
+  const res = await fetch(`${BASE}/api/file-info/${fileKey}`);
+  if (!res.ok) throw new Error("Failed to fetch file info");
+  return res.json();
+}

@@ -185,7 +185,12 @@ app.get("/api/diff/:fileKey", async (req, res) => {
     // Run the diff
     const result = diff(fromFile, toFile);
 
-    res.json(result);
+    res.json({
+      ...result,
+      fileName: toFile.name || fromFile.name || "Untitled",
+      fromDate: fromFile.lastModified,
+      toDate: toFile.lastModified,
+    });
   } catch (err) {
     console.error("Diff error:", err);
     res.status(500).json({ error: "Diff failed" });
@@ -222,6 +227,38 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   } catch (err) {
     console.error("Frame image error:", err);
     res.status(500).json({ error: "Failed to fetch frame image" });
+  }
+});
+
+// File info endpoint - returns basic file metadata
+// Usage: /api/file-info/FILE_KEY
+app.get("/api/file-info/:fileKey", async (req, res) => {
+  if (!currentAccessToken) {
+    return res.status(401).json({ error: "No access token available." });
+  }
+
+  const { fileKey } = req.params;
+
+  try {
+    const figmaRes = await fetch(
+      `https://api.figma.com/v1/files/${fileKey}?depth=1`,
+      {
+        headers: { Authorization: `Bearer ${currentAccessToken}` },
+      },
+    );
+
+    if (!figmaRes.ok) {
+      return res.status(500).json({ error: "Failed to fetch file info" });
+    }
+
+    const data = await figmaRes.json();
+    res.json({
+      name: data.name,
+      lastModified: data.lastModified,
+    });
+  } catch (err) {
+    console.error("File info error:", err);
+    res.status(500).json({ error: "Failed to fetch file info" });
   }
 });
 

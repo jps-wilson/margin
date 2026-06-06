@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
-import { fetchVersions } from "../api";
+import { fetchVersions, fetchFileInfo } from "../api";
 import "./Versions.css";
 
 function groupByWeek(versions) {
@@ -49,10 +49,14 @@ function Versions() {
   const [error, setError] = useState("");
   const [fromVersion, setFromVersion] = useState(null);
   const [toVersion, setToVersion] = useState(null);
+  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     async function loadVersions() {
       try {
+        const fileInfo = await fetchFileInfo(fileKey);
+        setFileName(fileInfo.name);
+
         const data = await fetchVersions(fileKey);
         const versionList = data.versions || [];
 
@@ -121,7 +125,7 @@ function Versions() {
   return (
     <PageShell className='versions-page'>
       <section className='versions-section'>
-        <h1 className='versions-title'>Version History</h1>
+        <h1 className='versions-title'>{fileName || "Version History"}</h1>
         <p className='versions-meta'>
           {versions.length} versions · {namedCount} named, {autoSaveCount}{" "}
           auto-saved
