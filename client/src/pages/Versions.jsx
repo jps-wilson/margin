@@ -96,6 +96,24 @@ function Versions() {
     }
   }
 
+  function handleCardClick(version) {
+    const isTo = toVersion && toVersion.id === version.id;
+    const isFrom = fromVersion && fromVersion.id === version.id;
+
+    if (isTo) {
+      setToVersion(null);
+    } else if (isFrom) {
+      setFromVersion(null);
+    } else if (!toVersion) {
+      setToVersion(version);
+    } else if (!fromVersion) {
+      setFromVersion(version);
+    } else {
+      // Both slots filled - replace "to"
+      setToVersion(version);
+    }
+  }
+
   function handleContinue() {
     if (!fromVersion || !toVersion) return;
     // for now, navigate to a placeholder changelog route
@@ -147,7 +165,11 @@ function Versions() {
                 if (isFrom) cardClass += " version-card--from";
 
                 return (
-                  <div className={cardClass} key={v.id}>
+                  <div
+                    className={cardClass}
+                    key={v.id}
+                    onClick={() => handleCardClick(v)}
+                  >
                     <div className='version-card-top'>
                       <span className='version-name'>
                         {v.label || formatDate(v.created_at)}

@@ -85,6 +85,19 @@
   background: rgba(26, 23, 20, 0.04);
 }
 
+.version-card:hover {
+  background: rgba(26, 23, 20, 0.03);
+  cursor: pointer;
+}
+
+.version-card--to:hover {
+  background: #faeeda;
+}
+
+.version-card--from:hover {
+  background: rgba(26, 23, 20, 0.04);
+}
+
 .version-card-top {
   display: flex;
   align-items: center;
