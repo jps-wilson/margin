@@ -65,19 +65,17 @@
   height: auto;
 }
 
-.scrubber-clip {
+.scrubber-image--to {
+  position: relative;
+  z-index: 1;
+}
+
+.scrubber-image--from {
   position: absolute;
   top: 0;
   left: 0;
-  bottom: 0;
-  overflow: hidden;
-}
-
-.scrubber-clip .scrubber-image--from {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .scrubber-divider {

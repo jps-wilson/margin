@@ -103,13 +103,12 @@ function Scrubber({ fileKey, from, to, sections }) {
               src={toImage}
               alt='To version'
             />
-            <div className='scrubber-clip' style={{ width: `${sliderPos}%` }}>
-              <img
-                className='scrubber-image scrubber-image--from'
-                src={fromImage}
-                alt='From version'
-              />
-            </div>
+            <img
+              className='scrubber-image scrubber-image--from'
+              src={fromImage}
+              alt='From version'
+              style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+            />
             <div
               className='scrubber-divider'
               style={{ left: `${sliderPos}%` }}

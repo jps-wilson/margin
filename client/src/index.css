@@ -96,7 +96,7 @@ a {
 
 /* Wordmark */
 .wordmark-area {
-  margin-bottom: 140px;
+  margin-bottom: var(--s-7);
 }
 
 .wordmark-link {
