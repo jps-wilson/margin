@@ -8,9 +8,13 @@
   --paper: #efe9dc;
   --ink: #1a1714;
   --ember: #d85a30;
+  --ember-dark: #b8492a;
   --stone: #5f5e5a;
   --mid: #888780;
   --faint: #d3d1c7;
+
+  /* Other colors */
+  --placeholder: #b4b2a9;
 
   /* Change-type colors (for changelog screen) */
   --change-added-bg: #eaf3de;
@@ -155,10 +159,32 @@ a {
 }
 
 .cta-button:hover {
-  background: #b8492a;
+  background: var(--ember-dark);
 }
 
 .cta-button .arrow {
   font-family: var(--serif);
   font-size: 15px;
+}
+
+/* Loading animation */
+.loading-text::after {
+  content: "";
+  animation: ellipsis 1.5s steps(3) infinite;
+}
+
+/* keyframes */
+@keyframes ellipsis {
+  0% {
+    content: "";
+  }
+  33% {
+    content: ".";
+  }
+  66% {
+    content: "..";
+  }
+  100% {
+    content: "...";
+  }
 }

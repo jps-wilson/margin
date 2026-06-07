@@ -50,7 +50,7 @@
 }
 
 .paste-input::placeholder {
-  color: #b4b2a9;
+  color: var(--placeholder);
 }
 
 .paste-input:focus {

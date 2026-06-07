@@ -67,7 +67,9 @@ function Overlay({ fileKey, from, to, sections }) {
       <div className='overlay-container'>
         {!fromImage || !toImage ? (
           <div className='overlay-loading'>
-            <p className='placeholder-text'>Loading frame images...</p>
+            <p className='placeholder-text loading-text'>
+              Loading frame images
+            </p>
           </div>
         ) : (
           <>

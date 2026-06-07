@@ -43,7 +43,7 @@ function Changelog() {
   if (loading) {
     return (
       <PageShell className='changelog-page'>
-        <p className='changelog-loading'>Comparing versions...</p>
+        <p className='changelog-loading loading-text'>Comparing versions</p>
       </PageShell>
     );
   }

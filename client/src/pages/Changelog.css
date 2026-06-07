@@ -74,11 +74,12 @@
 .tab--active::after {
   content: "";
   position: absolute;
-  bottom: calc(-1 * var(--s-3));
+  bottom: calc(-1 * var(--s-3) - 1px);
   left: 0;
   right: 0;
   height: 2px;
   background: var(--ember);
+  z-index: 1;
 }
 
 /* Change list */

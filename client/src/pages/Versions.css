@@ -78,7 +78,7 @@
 }
 
 .version-card--to {
-  background: #faeeda;
+  background: var(--change-resized-bg);
 }
 
 .version-card--from {
@@ -91,7 +91,7 @@
 }
 
 .version-card--to:hover {
-  background: #faeeda;
+  background: var(--change-resized-bg);
 }
 
 .version-card--from:hover {

@@ -94,7 +94,9 @@ function Scrubber({ fileKey, from, to, sections }) {
       <div className='scrubber-container' ref={containerRef}>
         {!fromImage || !toImage ? (
           <div className='scrubber-loading'>
-            <p className='placeholder-text'>Loading frame images...</p>
+            <p className='placeholder-text loading text'>
+              Loading frame images
+            </p>
           </div>
         ) : (
           <>

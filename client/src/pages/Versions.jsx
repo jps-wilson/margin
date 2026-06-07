@@ -127,7 +127,7 @@ function Versions() {
   if (loading) {
     return (
       <PageShell className='versions-page'>
-        <p className='versions-loading'>Loading versions...</p>
+        <p className='versions-loading loading-text'>Loading versions</p>
       </PageShell>
     );
   }
