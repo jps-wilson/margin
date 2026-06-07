@@ -99,6 +99,7 @@ function Overlay({ fileKey, from, to, sections }) {
           onChange={(e) => setOpacity(Number(e.target.value))}
         />
         <span className='overlay-slider-label'>to</span>
+        <span className='overlay-slider-value'>{opacity}%</span>
       </div>
     </div>
   );

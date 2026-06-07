@@ -116,8 +116,32 @@ function Scrubber({ fileKey, from, to, sections }) {
               style={{ left: `${sliderPos}%` }}
               onMouseDown={handleMouseDown}
             >
-              <div className='scrubber-handle'>
+              {/* <div className='scrubber-handle'>
                 <span>◂ ▸</span>
+              </div> */}
+              <div className='scrubber-handle'>
+                <svg
+                  width='16'
+                  height='16'
+                  viewBox='0 0 16 16'
+                  fill='none'
+                  aria-hidden='true'
+                >
+                  <path
+                    d='M6 4L2 8L6 12'
+                    stroke='currentColor'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                  <path
+                    d='M10 4L14 8L10 12'
+                    stroke='currentColor'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
               </div>
             </div>
           </>

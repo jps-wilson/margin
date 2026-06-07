@@ -45,7 +45,6 @@
   width: 100%;
   height: 800px;
   background: transparent;
-  border: none;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -69,7 +68,7 @@
 }
 
 .overlay-image.overlay-image--from {
-  position: absolute;
+  position: relative;
   width: 100%;
   height: auto;
   max-height: 800px;
@@ -91,6 +90,14 @@
 }
 
 /* Opacity slider */
+.overlay-slider {
+  flex: 1;
+  appearance: none;
+  height: 2px;
+  background: var(--faint);
+  border-radius: 1px;
+  outline: none;
+}
 
 .overlay-slider-row {
   display: flex;
@@ -106,13 +113,13 @@
   color: var(--mid);
 }
 
-.overlay-slider {
-  flex: 1;
-  appearance: none;
-  height: 2px;
-  background: var(--faint);
-  border-radius: 1px;
-  outline: none;
+.overlay-slider-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  min-width: 32px;
+  text-align: right;
 }
 
 .overlay-slider::-webkit-slider-thumb {

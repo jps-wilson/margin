@@ -102,8 +102,6 @@
   align-items: center;
   justify-content: center;
   color: var(--paper);
-  font-size: 10px;
-  letter-spacing: 2px;
 }
 
 .scrubber-empty {
