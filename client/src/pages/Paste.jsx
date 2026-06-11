@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
+import PageState from "../components/PageState";
 import "./Paste.css";
 
 function Paste() {
@@ -65,7 +66,15 @@ function Paste() {
           </button>
         </div>
 
-        {error && <p className='paste-error'>{error}</p>}
+        {error && (
+          <PageState
+            state='error'
+            title='Invalid file URL'
+            message={error}
+            actionLabel='Clear'
+            onAction={() => setError("")}
+          />
+        )}
 
         <a className='helper-link' href='#'>
           how do I find this?

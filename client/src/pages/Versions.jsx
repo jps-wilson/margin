@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
+import PageState from "../components/PageState";
 import { fetchVersions, fetchFileInfo } from "../api";
 import "./Versions.css";
 
@@ -47,19 +48,26 @@ function Versions() {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
   const [fromVersion, setFromVersion] = useState(null);
   const [toVersion, setToVersion] = useState(null);
   const [fileName, setFileName] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadVersions() {
+      setLoading(true);
+      setError("");
+
       try {
         const fileInfo = await fetchFileInfo(fileKey);
-        setFileName(fileInfo.name);
-
         const data = await fetchVersions(fileKey);
         const versionList = data.versions || [];
 
+        if (cancelled) return;
+
+        setFileName(fileInfo.name);
         setVersions(versionList);
 
         // Default selection: most recent names as "to", second named as "from"
@@ -69,20 +77,29 @@ function Versions() {
           setFromVersion(named[1]);
         } else if (named.length === 1) {
           setToVersion(named[0]);
-          if (versionList.length >= 2) setFromVersion(versionList[1]);
+          setFromVersion(versionList[1] || null);
         } else if (versionList.length >= 2) {
           setToVersion(versionList[0]);
           setFromVersion(versionList[1]);
+        } else {
+          setToVersion(null);
+          setFromVersion(null);
         }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) {
+          setError(err.message || "Failed to load versions.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     loadVersions();
-  }, [fileKey]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fileKey, retryCount]);
 
   function handleSelect(version, type) {
     if (type === "to") {
@@ -127,7 +144,7 @@ function Versions() {
   if (loading) {
     return (
       <PageShell className='versions-page'>
-        <p className='versions-loading loading-text'>Loading versions</p>
+        <PageState state='loading' title='Loading versions' />
       </PageShell>
     );
   }
@@ -135,7 +152,27 @@ function Versions() {
   if (error) {
     return (
       <PageShell className='versions-page'>
-        <p className='versions-error'>{error}</p>
+        <PageState
+          state='error'
+          title='Could not load versions'
+          message={error}
+          actionLabel='Try again'
+          onAction={() => setRetryCount((count) => count + 1)}
+        />
+      </PageShell>
+    );
+  }
+
+  if (!versions.length) {
+    return (
+      <PageShell className='versions-page'>
+        <PageState
+          state='empty'
+          title='No versions found'
+          message='This file does not have any versions to compare yet.'
+          actionLabel='Back to home'
+          actionTo='/'
+        />
       </PageShell>
     );
   }
@@ -152,6 +189,7 @@ function Versions() {
           {versions.length} versions · {namedCount} named, {autoSaveCount}{" "}
           auto-saved
         </p>
+
         <div className='versions-list'>
           {groups.map((group) => (
             <div className='version-group' key={group.label}>
@@ -195,8 +233,9 @@ function Versions() {
                         </span>
                       )}
                     </div>
+
                     <span className='version-sub'>
-                      {formatDate(v.created_at)} · by{" "}
+                      {formatDate(v.created_at)} · by
                       {v.user?.handle || "Unknown"}
                     </span>
                   </div>
@@ -206,7 +245,7 @@ function Versions() {
               {namedCount > 0 && group.autoSaves.length > 0 && (
                 <span className='autosave-count'>
                   + {group.autoSaves.length} auto-save
-                  {group.autoSaves.length !== 1 ? "s" : ""}{" "}
+                  {group.autoSaves.length !== 1 ? "s" : ""}
                   {group.label.toLowerCase()}
                 </span>
               )}

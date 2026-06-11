@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import PageShell from "../components/PageShell";
+import PageState from "../components/PageState";
 import Scrubber from "../components/Scrubber";
 import Overlay from "../components/Overlay";
 import { fetchDiff } from "../api";
@@ -25,6 +26,7 @@ function Changelog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("changelog");
+  const [retryCount, setRetryCount] = useState(0);
 
   const stats = data
     ? data.sections
@@ -67,12 +69,18 @@ function Changelog() {
     return () => {
       cancelled = true;
     };
-  }, [fileKey, from, to, missingParams]);
+  }, [fileKey, from, to, missingParams, retryCount]);
 
   if (missingParams) {
     return (
       <PageShell className='changelog-page'>
-        <p className='changelog-error'>Missing version parameters.</p>
+        <PageState
+          state='empty'
+          title='Missing version parameters'
+          message='Choose both a from and to version to view the changelog.'
+          actionLabel='Back to versions'
+          actionTo={`/versions/${fileKey}`}
+        />
       </PageShell>
     );
   }
@@ -80,7 +88,7 @@ function Changelog() {
   if (loading) {
     return (
       <PageShell className='changelog-page'>
-        <p className='changelog-loading loading-text'>Comparing versions</p>
+        <PageState state='loading' title='Comparing versions' />
       </PageShell>
     );
   }
@@ -88,7 +96,13 @@ function Changelog() {
   if (error) {
     return (
       <PageShell className='changelog-page'>
-        <p className='changelog-error'>{error}</p>
+        <PageState
+          state='error'
+          title='Could not load changelog'
+          message={error}
+          actionLabel='Try again'
+          onAction={() => setRetryCount((count) => count + 1)}
+        />
       </PageShell>
     );
   }
@@ -96,6 +110,24 @@ function Changelog() {
   const sortedSections = data
     ? [...data.sections].sort((a, b) => b.changes.length - a.changes.length)
     : [];
+
+  if (sortedSections.length === 0) {
+    return (
+      <PageShell
+        className='changelog-page'
+        backTo={`/versions/${fileKey}`}
+        backLabel='versions'
+      >
+        <PageState
+          state='empty'
+          title='No changes found'
+          message='These versions do not appear to contain any tracked changes.'
+          actionLabel='Back to versions'
+          actionTo={`/versions/${fileKey}`}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
