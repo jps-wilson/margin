@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
 import PageState from "../components/PageState";
@@ -8,6 +8,7 @@ function Paste() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const inputRef = useRef(null);
 
   // parse the url and pull out the file key using a regex
   function extractFileKey(input) {
@@ -49,6 +50,7 @@ function Paste() {
 
         <div className='paste-row'>
           <input
+            ref={inputRef}
             className='paste-input'
             type='text'
             placeholder='https://figma.com/design/...'
@@ -73,7 +75,11 @@ function Paste() {
             title='Invalid file URL'
             message={error}
             actionLabel='Clear'
-            onAction={() => setError("")}
+            onAction={() => {
+              setError("");
+              setUrl("");
+              inputRef.current?.focus();
+            }}
           />
         )}
 
