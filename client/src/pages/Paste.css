@@ -74,3 +74,30 @@ button.cta-button {
 .helper-link:hover {
   color: var(--ink);
 }
+
+.helper-link--button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.helper-panel {
+  margin-top: var(--s-3);
+  max-width: 640px;
+  padding: var(--s-4);
+  border: 1px solid var(--faint);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--stone);
+}
+
+.helper-panel code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+}

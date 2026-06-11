@@ -7,6 +7,7 @@ import "./Paste.css";
 function Paste() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
@@ -83,9 +84,23 @@ function Paste() {
           />
         )}
 
-        <a className='helper-link' href='#'>
+        <button
+          type='button'
+          className='helper-link helper-link--button'
+          onClick={() => setShowHelp((prev) => !prev)}
+        >
           how do I find this?
-        </a>
+        </button>
+
+        {showHelp && (
+          <div className='helper-panel'>
+            <p>Open the Figma file in your browser and copy the full URL.</p>
+            <p>
+              It should look like:{" "}
+              <code>https://www.figma.com/design/.../File-Name</code>
+            </p>
+          </div>
+        )}
       </section>
     </PageShell>
   );
