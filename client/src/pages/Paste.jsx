@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
 import PageState from "../components/PageState";
@@ -8,8 +8,10 @@ function Paste() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [showHelp, setShowHelp] = useState(false);
+  const [animateDemo, setAnimateDemo] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef(null);
+  const timerRef = useRef(null);
 
   function extractFileKey(input) {
     try {
@@ -35,6 +37,37 @@ function Paste() {
     navigate(`/versions/${fileKey}`);
   }
 
+  // cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
+
+  function toggleHelp() {
+    setShowHelp((prev) => {
+      const opening = !prev;
+      if (opening) {
+        setAnimateDemo(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+          setAnimateDemo(false);
+          timerRef.current = null;
+        }, 1800);
+      } else {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        setAnimateDemo(false);
+      }
+      return opening;
+    });
+  }
+
   return (
     <PageShell className='paste-page' backTo='/' backLabel='home'>
       <section className='paste-section'>
@@ -58,7 +91,12 @@ function Paste() {
               if (e.key === "Enter") handleSubmit(e);
             }}
           />
-          <button className='cta-button' onClick={handleSubmit}>
+          <button
+            type='button'
+            className='cta-button'
+            onClick={handleSubmit}
+            disabled={url.trim() === ""}
+          >
             <span>Continue</span>
             <span className='arrow' aria-hidden='true'>
               →
@@ -84,7 +122,7 @@ function Paste() {
         <button
           type='button'
           className='helper-link helper-link--button'
-          onClick={() => setShowHelp((prev) => !prev)}
+          onClick={toggleHelp}
         >
           how do I find this?
         </button>
@@ -94,7 +132,10 @@ function Paste() {
             className='helper-panel helper-panel--browser'
             aria-live='polite'
           >
-            <div className='browser-mock' aria-hidden='true'>
+            <div
+              className={`browser-mock${animateDemo ? " is-animating" : ""}`}
+              aria-hidden='true'
+            >
               <div className='browser-chrome'>
                 <span className='browser-dot browser-dot--red' />
                 <span className='browser-dot browser-dot--yellow' />
@@ -119,6 +160,7 @@ function Paste() {
                 </div>
 
                 <div className='motion-chip'>Copied</div>
+
                 <div className='motion-arrow'>↓</div>
 
                 <div className='paste-target'>
