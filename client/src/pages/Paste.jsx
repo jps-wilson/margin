@@ -93,11 +93,48 @@ function Paste() {
         </button>
 
         {showHelp && (
-          <div className='helper-panel'>
-            <p>Open the Figma file in your browser and copy the full URL.</p>
-            <p>
-              It should look like:{" "}
-              <code>https://www.figma.com/design/.../File-Name</code>
+          <div
+            className='helper-panel helper-panel--browser'
+            aria-live='polite'
+          >
+            <div className='browser-mock' aria-hidden='true'>
+              <div className='browser-chrome'>
+                <span className='browser-dot browser-dot--red' />
+                <span className='browser-dot browser-dot--yellow' />
+                <span className='browser-dot browser-dot--green' />
+                <div className='browser-tab'>Figma — File</div>
+              </div>
+
+              <div className='browser-content'>
+                <div className='address-row'>
+                  <span className='address-label'>figma.com</span>
+                  <div className='address-bar'>
+                    <span className='address-text'>
+                      https://www.figma.com/design/abc123/File-Name
+                    </span>
+                    <span className='address-caret' />
+                  </div>
+                  <div className='copy-chip'>Copy</div>
+                </div>
+
+                <div className='motion-arrow'>↓</div>
+
+                <div className='paste-target'>
+                  <span className='paste-target__label'>Paste here</span>
+                  <div className='paste-target__field'>
+                    <span className='paste-target__text'>
+                      https://www.figma.com/design/...
+                    </span>
+                  </div>
+                </div>
+
+                <div className='motion-chip'>Copied</div>
+              </div>
+            </div>
+
+            <p className='helper-panel__text'>
+              Open the Figma file, copy the full URL from the address bar, then
+              paste it here.
             </p>
           </div>
         )}
