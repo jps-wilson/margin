@@ -45,3 +45,33 @@
   color: var(--mid);
   margin-top: var(--s-3);
 }
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 1024px) {
+    .landing .wordmark-area {
+        margin-bottom: 80px;
+    }
+    
+    .headline {
+        font-size: 80px;
+    }
+    
+    .subhead {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing .wordmark-area {
+        margin-bottom: 48px;
+    }
+    
+    .headline {
+        font-size: 56px;
+    }
+    
+    .subhead {
+        font-size: 16px;
+        max-width: 100%;
+    }
+}

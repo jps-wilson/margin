@@ -188,3 +188,41 @@ a {
     content: "...";
   }
 }
+
+/* RESPONSIVE SIZING */
+@media (max-width: 1024px) {
+  .margin-rule {
+    left: 48px;
+  }
+
+  .content {
+    padding: var(--s-7) var(--s-6) var(--s-7) calc(48px + var(--s-5));
+  }
+
+  .wordmark {
+    font-size: 24px;
+  }
+
+  .microcopy {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .margin-rule {
+    display: none;
+  }
+
+  .content {
+    padding: var(--s-6) var(--s-5);
+  }
+
+  .wordmark {
+    font-size: 22px;
+  }
+
+  .cta-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}

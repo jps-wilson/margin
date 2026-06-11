@@ -192,3 +192,25 @@
   letter-spacing: 0.04em;
   color: var(--mid);
 }
+
+
+/* RESPONSIVE BREAKPOINTS  */
+@media (max-width: 768px) {
+    .versions-title {
+        font-size: 24px;
+    }
+    
+    .version-card-top {
+        flex-wrap: wrap;
+    }
+    
+    .version-actions {
+        margin-left: 0;
+        margin-top: var(--s-1);
+    }
+}
+
+
+
+
+
