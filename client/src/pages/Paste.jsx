@@ -69,6 +69,7 @@ function Paste() {
         {error && (
           <PageState
             state='error'
+            className='page-state--inline'
             title='Invalid file URL'
             message={error}
             actionLabel='Clear'

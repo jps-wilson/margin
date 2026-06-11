@@ -76,6 +76,30 @@
   outline-offset: 2px;
 }
 
+/* Inline/compact variant for forms like Paste */
+.page-state--inline {
+  padding: var(--s-3) 0 0;
+}
+
+.page-state--inline .page-state__card {
+  gap: var(--s-2);
+  max-width: 100%;
+}
+
+.page-state--inline .page-state__title {
+  font-size: 20px;
+}
+
+.page-state--inline .page-state__message {
+  font-size: 15px;
+  max-width: 100%;
+}
+
+.page-state--inline .page-state__action {
+  min-height: 40px;
+  padding: 10px 16px;
+}
+
 @media (max-width: 768px) {
   .page-state {
     padding: var(--s-6) 0;
