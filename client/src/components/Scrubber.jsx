@@ -1,10 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchFrameImage } from "../api";
 import "./Scrubber.css";
 
 function Scrubber({ fileKey, from, to, sections }) {
-  const framesWithIds = sections.filter((s) => s.id);
-  const [selectedFrame, setSelectedFrame] = useState(framesWithIds[0] || null);
+  const framesWithIds = useMemo(() => sections.filter((s) => s.id), [sections]);
+  const [selectedFrameId, setSelectedFrameId] = useState(
+    () => framesWithIds[0]?.id || null,
+  );
+
+  // get selectedFrame from id + available frames
+  const selectedFrame = useMemo(() => {
+    if (!framesWithIds.length) return null;
+    return (
+      framesWithIds.find((f) => f.id === selectedFrameId) || framesWithIds[0]
+    );
+  }, [framesWithIds, selectedFrameId]);
+
   const [fromImage, setFromImage] = useState(null);
   const [toImage, setToImage] = useState(null);
   const [sliderPos, setSliderPos] = useState(55);
@@ -14,34 +25,52 @@ function Scrubber({ fileKey, from, to, sections }) {
   useEffect(() => {
     if (!selectedFrame) return;
 
+    let cancelled = false;
+
     async function loadImages() {
       setFromImage(null);
       setToImage(null);
+
       try {
         const [fromUrl, toUrl] = await Promise.all([
           fetchFrameImage(fileKey, selectedFrame.id, from),
           fetchFrameImage(fileKey, selectedFrame.id, to),
         ]);
-        setFromImage(fromUrl);
-        setToImage(toUrl);
+
+        if (!cancelled) {
+          setFromImage(fromUrl);
+          setToImage(toUrl);
+        }
       } catch (err) {
-        console.error("Failed to fetch frame images:", err);
+        if (!cancelled) {
+          console.error("Failed to fetch frame images:", err);
+        }
       }
     }
+
     loadImages();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedFrame, fileKey, from, to]);
 
-  function handleMouseDown() {
+  function updateSliderFromClientX(clientX) {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(percent);
+  }
+
+  function handleMouseDown(e) {
+    updateSliderFromClientX(e.clientX);
     setDragging(true);
   }
 
   useEffect(() => {
     function handleMouseMove(e) {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
-      setSliderPos(percent);
+      updateSliderFromClientX(e.clientX);
     }
 
     function handleMouseUp() {
@@ -52,6 +81,7 @@ function Scrubber({ fileKey, from, to, sections }) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     }
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
@@ -74,8 +104,7 @@ function Scrubber({ fileKey, from, to, sections }) {
           className='scrubber-select'
           value={selectedFrame?.id || ""}
           onChange={(e) => {
-            const frame = framesWithIds.find((f) => f.id === e.target.value);
-            setSelectedFrame(frame);
+            setSelectedFrameId(e.target.value || null);
           }}
         >
           {framesWithIds.map((frame) => (
@@ -91,10 +120,14 @@ function Scrubber({ fileKey, from, to, sections }) {
         <span className='badge badge--to'>to</span>
       </div>
 
-      <div className='scrubber-container' ref={containerRef}>
+      <div
+        className='scrubber-container'
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+      >
         {!fromImage || !toImage ? (
           <div className='scrubber-loading'>
-            <p className='placeholder-text loading text'>
+            <p className='placeholder-text loading-text'>
               Loading frame images
             </p>
           </div>
@@ -116,9 +149,6 @@ function Scrubber({ fileKey, from, to, sections }) {
               style={{ left: `${sliderPos}%` }}
               onMouseDown={handleMouseDown}
             >
-              {/* <div className='scrubber-handle'>
-                <span>◂ ▸</span>
-              </div> */}
               <div className='scrubber-handle'>
                 <svg
                   width='16'

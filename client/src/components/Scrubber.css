@@ -50,6 +50,7 @@
   overflow: hidden;
   cursor: ew-resize;
   user-select: none;
+  touch-action: pan-y; /* allows for vertical page scrolling */
 }
 
 .scrubber-loading {

@@ -43,7 +43,7 @@
 .overlay-container {
   position: relative;
   width: 100%;
-  height: 800px;
+  height: min(800px, 80vh);
   background: transparent;
   border-radius: 4px;
   overflow: hidden;

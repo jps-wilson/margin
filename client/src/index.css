@@ -69,6 +69,21 @@ body {
   min-height: 100vh;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  overflow-y: auto;
+}
+
+main {
+  min-height: 100vh;
+  position: relative;
+}
+
 p {
   margin: 0;
 }
@@ -96,6 +111,8 @@ a {
   max-width: 1440px;
   margin: 0 auto;
   padding: var(--s-9) var(--s-9) var(--s-9) calc(96px + var(--s-6));
+  min-height: 100%;
+  overflow: visible;
 }
 
 /* Wordmark */
