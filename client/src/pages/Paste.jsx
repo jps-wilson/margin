@@ -11,19 +11,16 @@ function Paste() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
-  // parse the url and pull out the file key using a regex
   function extractFileKey(input) {
     try {
       const parsed = new URL(input);
-      // Match figma.com/design/KEY or figma.com/file/KEY
       const match = parsed.pathname.match(/\/(design|file)\/([a-zA-Z0-9]+)/);
-      if (match) return match[2];
-      return null;
+      return match ? match[2] : null;
     } catch {
       return null;
     }
   }
-  // validates and navigates to /versions/:fileKey
+
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -108,27 +105,33 @@ function Paste() {
               <div className='browser-content'>
                 <div className='address-row'>
                   <span className='address-label'>figma.com</span>
+
                   <div className='address-bar'>
                     <span className='address-text'>
                       https://www.figma.com/design/abc123/File-Name
                     </span>
                     <span className='address-caret' />
                   </div>
-                  <div className='copy-chip'>Copy</div>
+
+                  <div className='address-actions'>
+                    <span className='copy-chip'>Copy</span>
+                  </div>
                 </div>
 
+                <div className='motion-chip'>Copied</div>
                 <div className='motion-arrow'>↓</div>
 
                 <div className='paste-target'>
                   <span className='paste-target__label'>Paste here</span>
                   <div className='paste-target__field'>
-                    <span className='paste-target__text'>
+                    <span className='paste-target__text paste-target__text--ghost'>
                       https://www.figma.com/design/...
+                    </span>
+                    <span className='paste-target__text paste-target__text--filled'>
+                      https://www.figma.com/design/abc123/File-Name
                     </span>
                   </div>
                 </div>
-
-                <div className='motion-chip'>Copied</div>
               </div>
             </div>
 
