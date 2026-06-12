@@ -84,15 +84,15 @@ function Overlay({ fileKey, from, to, sections }) {
         ) : (
           <>
             <img
-              className='overlay-image overlay-image--from'
-              src={fromImage}
-              alt='From version'
-            />
-            <img
               className='overlay-image overlay-image--to'
               src={toImage}
               alt='To version'
-              style={{ opacity: opacity / 100 }}
+            />
+            <img
+              className='overlay-image overlay-image--from'
+              src={fromImage}
+              alt='From version'
+              style={{ opacity: 1 - opacity / 100 }}
             />
           </>
         )}
