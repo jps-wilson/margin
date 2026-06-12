@@ -103,9 +103,9 @@ app.get("/auth/callback", async (req, res) => {
   }
 });
 
-// Test endpoint — fetches a Figma file's version history.
-// Usage: /api/test-versions/YOUR_FILE_KEY
-app.get("/api/test-versions/:fileKey", async (req, res) => {
+// Versions endpoint - fetches a Figma file's version history
+// Usage: /api/version/YOUR_FILE_KEY
+app.get("/api/versions/:fileKey", async (req, res) => {
   if (!currentAccessToken) {
     return res.status(401).json({
       error:

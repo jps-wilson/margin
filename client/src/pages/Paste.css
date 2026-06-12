@@ -50,16 +50,11 @@
 }
 
 .paste-input::placeholder {
-  color: #b4b2a9;
+  color: var(--placeholder);
 }
 
 .paste-input:focus {
   border-bottom-color: var(--ember);
-}
-
-button.cta-button {
-  border: none;
-  cursor: pointer;
 }
 
 .helper-link {

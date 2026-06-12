@@ -235,7 +235,7 @@ function Versions() {
                     </div>
 
                     <span className='version-sub'>
-                      {formatDate(v.created_at)} · by
+                      {formatDate(v.created_at)} · by{" "}
                       {v.user?.handle || "Unknown"}
                     </span>
                   </div>

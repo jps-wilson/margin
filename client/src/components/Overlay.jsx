@@ -12,6 +12,8 @@ function Overlay({ fileKey, from, to, sections }) {
   useEffect(() => {
     if (!selectedFrame) return;
 
+    let cancelled = false;
+
     async function loadImages() {
       setFromImage(null);
       setToImage(null);
@@ -21,14 +23,22 @@ function Overlay({ fileKey, from, to, sections }) {
           fetchFrameImage(fileKey, selectedFrame.id, from),
           fetchFrameImage(fileKey, selectedFrame.id, to),
         ]);
-        setFromImage(fromUrl);
-        setToImage(toUrl);
+        if (!cancelled) {
+          setFromImage(fromUrl);
+          setToImage(toUrl);
+        }
       } catch (err) {
-        console.error("Failed to fetch frame images:", err);
+        if (!cancelled) {
+          console.error("Failed to fetch frame images:", err);
+        }
       }
     }
 
     loadImages();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedFrame, fileKey, from, to]);
 
   if (framesWithIds.length === 0) {

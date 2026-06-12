@@ -32,15 +32,14 @@ The application generates a scannable changelog with concrete deltas, alongside 
   - Changelog view
   - Side-by-side scrubber
   - Overlay with annotations
-- Shareable URLs for diff sessions
-- Public deployment for external users
 
 ## Future Improvements
 
-- Figma API integration
-- AI-assisted comparisons
-- Exportable reports
-- Side-by-side diff viewer
+- Persistent session management (replace in-memory token storage)
+- Responsive mobile layout
+- Exportable diff reports (PDF/Markdown)
+- Named version filtering (surface labeled versions seperately)
+- Diff engine improvements (name-based matching for restructured files)
 
 ## Tech Stack
 
