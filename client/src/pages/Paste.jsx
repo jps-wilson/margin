@@ -12,6 +12,9 @@ function Paste() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const timerRef = useRef(null);
+  const pasteTimerRef = useRef(null);
+
+  const DEMO_URL = "https://www.figma.com/design/abc123/File-Name";
 
   function extractFileKey(input) {
     try {
@@ -37,35 +40,91 @@ function Paste() {
     navigate(`/versions/${fileKey}`);
   }
 
-  // cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      if (pasteTimerRef.current) {
+        clearTimeout(pasteTimerRef.current);
+        pasteTimerRef.current = null;
+      }
     };
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
   }, []);
 
   function toggleHelp() {
     setShowHelp((prev) => {
       const opening = !prev;
-      if (opening) {
+      if (!opening) {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        if (pasteTimerRef.current) {
+          clearTimeout(pasteTimerRef.current);
+          pasteTimerRef.current = null;
+        }
+        setAnimateDemo(false);
+      } else {
         setAnimateDemo(true);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
           setAnimateDemo(false);
           timerRef.current = null;
         }, 1800);
-      } else {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-        setAnimateDemo(false);
       }
       return opening;
     });
+  }
+
+  function handleDemoCopy() {
+    // copy demo URL to clipboard (best-effort)
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(DEMO_URL).catch((err) => {
+        console.warn("Clipboard write failed", err);
+      });
+    } else {
+      const t = document.createElement("textarea");
+      t.value = DEMO_URL;
+      document.body.appendChild(t);
+      t.select();
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        console.warn("execCommand copy failed", err);
+      }
+      document.body.removeChild(t);
+    }
+
+    // animate demo and simulate paste into the input mid-way
+    setAnimateDemo(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (pasteTimerRef.current) clearTimeout(pasteTimerRef.current);
+
+    // simulate paste into the real input after animation midpoint
+    pasteTimerRef.current = setTimeout(() => {
+      setUrl(DEMO_URL);
+      inputRef.current?.focus();
+      pasteTimerRef.current = null;
+    }, 900);
+
+    // stop animation at end
+    timerRef.current = setTimeout(() => {
+      setAnimateDemo(false);
+      timerRef.current = null;
+    }, 1800);
+  }
+
+  function onCopyChipKey(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleDemoCopy();
+    }
   }
 
   return (
@@ -90,6 +149,7 @@ function Paste() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit(e);
             }}
+            aria-describedby={error ? "paste-error" : undefined}
           />
           <button
             type='button'
@@ -107,6 +167,7 @@ function Paste() {
         {error && (
           <PageState
             state='error'
+            id='paste-error'
             className='page-state--inline'
             title='Invalid file URL'
             message={error}
@@ -148,14 +209,21 @@ function Paste() {
                   <span className='address-label'>figma.com</span>
 
                   <div className='address-bar'>
-                    <span className='address-text'>
-                      https://www.figma.com/design/abc123/File-Name
-                    </span>
+                    <span className='address-text'>{DEMO_URL}</span>
                     <span className='address-caret' />
                   </div>
 
                   <div className='address-actions'>
-                    <span className='copy-chip'>Copy</span>
+                    <span
+                      className='copy-chip'
+                      role='button'
+                      tabIndex={0}
+                      aria-label='Copy example Figma URL'
+                      onClick={handleDemoCopy}
+                      onKeyDown={onCopyChipKey}
+                    >
+                      Copy
+                    </span>
                   </div>
                 </div>
 
@@ -170,7 +238,7 @@ function Paste() {
                       https://www.figma.com/design/...
                     </span>
                     <span className='paste-target__text paste-target__text--filled'>
-                      https://www.figma.com/design/abc123/File-Name
+                      {DEMO_URL}
                     </span>
                   </div>
                 </div>

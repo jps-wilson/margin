@@ -294,6 +294,17 @@ button.cta-button {
   animation: filledFade 4s ease-in-out infinite;
 }
 
+/* trigger demo once */
+.browser-mock.is-animating .motion-chip {
+  animation: copiedToPaste 1800ms ease-in-out forwards;
+}
+.browser-mock.is-animating .paste-target__text--ghost {
+  animation: ghostFade 1800ms ease-in-out forwards;
+}
+.browser-mock.is-animating .paste-target__text--filled {
+  animation: filledFade 1800ms ease-in-out forwards;
+}
+
 @keyframes addressGlow {
   0%,
   18% {
@@ -367,6 +378,7 @@ button.cta-button {
   }
 }
 
+/* screens */
 @media (max-width: 768px) {
   .browser-content {
     min-height: 220px;
@@ -375,5 +387,14 @@ button.cta-button {
 
   .paste-target {
     margin-top: 40px;
+  }
+}
+
+/* respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .browser-mock.is-animating .motion-chip,
+  .browser-mock.is-animating .paste-target__text--ghost,
+  .browser-mock.is-animating .paste-target__text--filled {
+    animation: none !important;
   }
 }
