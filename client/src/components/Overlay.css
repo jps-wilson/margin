@@ -1,0 +1,134 @@
+/* ============================================================
+   Overlay component
+   ============================================================ */
+
+.overlay-view {
+  max-width: 720px;
+  width: 100%;
+}
+
+.overlay-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+
+.overlay-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
+
+.overlay-select {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 4px 12px;
+  border: 0.5px solid var(--faint);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.overlay-badges {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--s-2);
+}
+
+.overlay-container {
+  position: relative;
+  width: 100%;
+  height: min(800px, 80vh);
+  background: transparent;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.overlay-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.overlay-image.overlay-image--from {
+  position: relative;
+  width: 100%;
+  height: auto;
+  max-height: 800px;
+  object-fit: contain;
+  object-position: top left;
+  z-index: 1;
+  display: block;
+}
+
+.overlay-image.overlay-image--to {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top left;
+  z-index: 2;
+}
+
+/* Opacity slider */
+.overlay-slider {
+  flex: 1;
+  appearance: none;
+  height: 2px;
+  background: var(--faint);
+  border-radius: 1px;
+  outline: none;
+}
+
+.overlay-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+.overlay-slider-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
+
+.overlay-slider-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+  min-width: 32px;
+  text-align: right;
+}
+
+.overlay-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ember);
+  cursor: pointer;
+}
+
+.overlay-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ember);
+  border: none;
+  cursor: pointer;
+}
+
+.overlay-empty {
+  padding: var(--s-9) 0;
+}

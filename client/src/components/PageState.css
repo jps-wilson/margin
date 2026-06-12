@@ -1,0 +1,115 @@
+.page-state {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  padding: var(--s-7) 0;
+}
+
+.page-state__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-4);
+  max-width: 560px;
+}
+
+.page-state__status {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+  text-transform: uppercase;
+}
+
+.page-state__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.page-state__message {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--stone);
+  max-width: 42ch;
+}
+
+.page-state__hint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--mid);
+}
+
+.page-state__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 5px;
+  background: var(--ember);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.page-state__action:hover {
+  background: var(--ember-dark);
+}
+
+.page-state__action:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Inline/compact variant for forms like Paste */
+.page-state--inline {
+  padding: var(--s-3) 0 0;
+}
+
+.page-state--inline .page-state__card {
+  gap: var(--s-2);
+  max-width: 100%;
+}
+
+.page-state--inline .page-state__title {
+  font-size: 20px;
+}
+
+.page-state--inline .page-state__message {
+  font-size: 15px;
+  max-width: 100%;
+}
+
+.page-state--inline .page-state__action {
+  min-height: 40px;
+  padding: 10px 16px;
+}
+
+@media (max-width: 768px) {
+  .page-state {
+    padding: var(--s-6) 0;
+  }
+
+  .page-state__title {
+    font-size: 26px;
+  }
+
+  .page-state__message {
+    font-size: 16px;
+  }
+}
