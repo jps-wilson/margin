@@ -220,13 +220,19 @@ function Versions() {
                         <span className='version-actions'>
                           <button
                             className='select-btn'
-                            onClick={() => handleSelect(v, "from")}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelect(v, "from");
+                            }}
                           >
                             from
                           </button>
                           <button
                             className='select-btn'
-                            onClick={() => handleSelect(v, "to")}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelect(v, "to");
+                            }}
                           >
                             to
                           </button>
