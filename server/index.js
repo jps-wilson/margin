@@ -1,38 +1,86 @@
 // Minimal Express server for the Figma Diff Tool backend.
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { diff } from "./diff.js";
+import { error } from "console";
 
 // Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = process.env.NODE_ENV === "production";
+const SESSION_COOKIE = "mdt_sid";
 
 // Middleware
-app.use(cors()); // Allow the front-end to call this API during dev
-app.use(express.json()); // Parse incoming JSON request bodies
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  }),
+);
+app.use(express.json());
+app.use(cookieParser());
 
 // Health check route - confirms the server is running
 app.get("/", (req, res) => {
   res.json({ message: "Figma Diff Tool API is running" });
 });
 
-// In-memory store for OAuth state values (temporary)
-const oauthStates = new Set();
-// Temporary token storage - holds the most recent access token for testing
-// Will replace this with real session management later
-let currentAccessToken = null;
+// *Session Storage*
+// Per-session token store. Keyed by a random session id stored in an
+// httpOnly cookie on the visitor's browser, so each visitor gets their own
+// Figma access token instead of everyone sharing one global variable.
+// NOTE: this is in-memory, so it resets on server restart (eg: Render
+// free-tier spin-down after inactivity).
 
-// Start the OAuth flow - redirects the user to Figma's authorization page
+const sessions = new Map(); // sessionId -> { accessToken, obtainedAt }
+const pendingStates = new Map(); // oauth state -> sessionId (short-lived, CSRF check)
+
+function getOrCreateSessionId(req, res) {
+  let sessionId = req.cookies[SESSION_COOKIE];
+  if (!sessionId) {
+    sessionId = crypto.randomBytes(24).toString("hex");
+    res.cookie(SESSION_COOKIE, sessionId, {
+      httpOnly: true,
+      secure: IS_PROD,
+      sameSite: IS_PROD ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+  }
+  return sessionId;
+}
+
+function requireAccessToken(req, res) {
+  const sessionId = req.cookies[SESSION_COOKIE];
+  const session = sessionId ? sessions.get(sessionId) : null;
+
+  if (!session) {
+    res.status(401).json({
+      error: "Not connected to Figma. Visit /auth/figma to authenticate.",
+    });
+    return null;
+  }
+
+  return session.accessToken;
+}
+
+// *OAuth flow*
+
+// Start the OAuth flow -> redirects the user to Figma's authorization page
 app.get("/auth/figma", (req, res) => {
-  // Generate a random state value to prevent CSRF attacks
-  const state = crypto.randomBytes(16).toString("hex");
-  oauthStates.add(state);
+  const sessionId = getOrCreateSessionId(req, res);
 
-  // Build the Figma authorization URL
+  // Generate a random state value to prevent CSRF attacks, tied to this
+  // specific visitor's session so the callback can't be highjacked to write
+  // a token into someone else's sessioon.
+  const state = crypto.randomBytes(16).toString("hex");
+  pendingStates.set(state, sessionId);
+
+  // Build the Figma auth URL
   const authUrl = new URL("https://www.figma.com/oauth");
   authUrl.searchParams.set("client_id", process.env.FIGMA_CLIENT_ID);
   authUrl.searchParams.set("redirect_uri", process.env.FIGMA_REDIRECT_URI);
@@ -47,26 +95,24 @@ app.get("/auth/figma", (req, res) => {
   res.redirect(authUrl.toString());
 });
 
-// OAuth callback - Figma redirects here after the user approves
+// OAuth callback - Figma redirects here after user aproves
 app.get("/auth/callback", async (req, res) => {
   const { code, state, error } = req.query;
 
-  // Handle errors from Figma
   if (error) {
     console.error("Figma OAuth error:", error);
     return res.status(400).json({ error: `Figma returned an error: ${error}` });
   }
 
-  // Verify the state parameter to prevent CSRF
-  if (!state || !oauthStates.has(state)) {
+  // Verify the state param to prevent CSRF, and recover which session this auth belongs to
+  const sessionId = state ? pendingStates.get(state) : null;
+  if (!state || !sessionId) {
     console.error("Invalid or missing state parameter");
     return res.status(400).json({ error: "Invalid state parameter" });
   }
+  pendingStates.delete(state);
 
-  // State is valid - remove it from the set so it can't be reused
-  oauthStates.delete(state);
-
-  // Exchange the code for an access token
+  // Exchange code for access token
   try {
     const tokenResponse = await fetch("https://api.figma.com/v1/oauth/token", {
       method: "POST",
@@ -93,9 +139,14 @@ app.get("/auth/callback", async (req, res) => {
 
     const tokenData = await tokenResponse.json();
     console.log("Token exchange successful. Token type:", tokenData.token_type);
-    currentAccessToken = tokenData.access_token;
 
-    // Redirect back to the React client
+    // Store the token under THIS visitor's session only
+    sessions.set(sessionId, {
+      accessToken: tokenData.accessToken,
+      obtainedAt: Date.now(),
+    });
+
+    // Redirect back to React client
     res.redirect(`${process.env.CLIENT_URL}/paste`);
   } catch (err) {
     console.error("Token exchange error:", err);
@@ -103,33 +154,29 @@ app.get("/auth/callback", async (req, res) => {
   }
 });
 
-// Versions endpoint - fetches a Figma file's version history
-// Usage: /api/version/YOUR_FILE_KEY
-app.get("/api/versions/:fileKey", async (req, res) => {
-  if (!currentAccessToken) {
-    return res.status(401).json({
-      error:
-        "No access token available. Visit /auth/figma to authenticate first.",
-    });
-  }
+// --- API ENDPOINTS ----
+
+/**
+ * Version endpoint - fetches a Figma file's version history
+ * Usage: /api/version/YOUR_FILE_KEY
+ */
+app.get("api/versions/:fileKey", async (req, res) => {
+  const accessToken = requireAccessToken(req, res);
+  if (!accessToken) return; // response already sent
 
   const { fileKey } = req.params;
 
   try {
     const figmaResponse = await fetch(
-      `https://api.figma.com/v1/files/${fileKey}/versions`,
-      {
-        headers: {
-          Authorization: `Bearer ${currentAccessToken}`,
-        },
-      },
+      `https://api.figma.com/v1/files${fileKey}/versions`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
     if (!figmaResponse.ok) {
       const errorText = await figmaResponse.text();
       console.error("Figma API call failed:", figmaResponse.status, errorText);
       return res.status(figmaResponse.status).json({
-        error: "Figma API call failed",
+        error: "figma API call failed",
         status: figmaResponse.status,
       });
     }
@@ -143,12 +190,8 @@ app.get("/api/versions/:fileKey", async (req, res) => {
 });
 
 app.get("/api/diff/:fileKey", async (req, res) => {
-  if (!currentAccessToken) {
-    return res.status(401).json({
-      error:
-        "No access token available. Visit /auth/figma to authenticate first.",
-    });
-  }
+  const accessToken = requireAccessToken(req, res);
+  if (!accessToken) return;
 
   const { fileKey } = req.params;
   const { from, to } = req.query;
@@ -160,20 +203,19 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 
   try {
-    // Fetch both versions in parallel
     const [fromRes, toRes] = await Promise.all([
       fetch(`https://api.figma.com/v1/files/${fileKey}?version=${from}`, {
-        headers: { Authorization: `Bearer ${currentAccessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }),
       fetch(`https://api.figma.com/v1/files/${fileKey}?version=${to}`, {
-        headers: { Authorization: `Bearer ${currentAccessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }),
     ]);
 
     if (!fromRes.ok || !toRes.ok) {
       console.error("Figma API error:", fromRes.status, toRes.status);
       return res
-        .status(500)
+        .status(fromRes.ok ? toRes.status : fromRes.status)
         .json({ error: "Failed to fetch file versions from Figma" });
     }
 
@@ -182,7 +224,6 @@ app.get("/api/diff/:fileKey", async (req, res) => {
       toRes.json(),
     ]);
 
-    // Run the diff
     const result = diff(fromFile, toFile);
 
     res.json({
@@ -197,12 +238,13 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 });
 
-// Frame image endpoint — renders a specific Figma node as a PNG.
-// Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
+/**
+ * Frame image endpoint - renders a specific Figma node as a PNG
+ * Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
+ */
 app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
-  if (!currentAccessToken) {
-    return res.status(401).json({ error: "No access token available." });
-  }
+  const accessToken = requireAccessToken(req, res);
+  if (!accessToken) return;
 
   const { fileKey, nodeId } = req.params;
   const { version } = req.query;
@@ -211,13 +253,15 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
     const url = `https://api.figma.com/v1/images/${fileKey}?ids=${nodeId}&format=png&scale=1${version ? `&version=${version}` : ""}`;
 
     const figmaRes = await fetch(url, {
-      headers: { Authorization: `Bearer ${currentAccessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!figmaRes.ok) {
       const errorText = await figmaRes.text();
       console.error("Figma image API error:", figmaRes.status, errorText);
-      return res.status(500).json({ error: "Failed to fetch frame image" });
+      return res
+        .status(figmaRes.status)
+        .json({ error: "Failed to fetch frame image" });
     }
 
     const data = await figmaRes.json();
@@ -230,25 +274,26 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   }
 });
 
-// File info endpoint - returns basic file metadata
-// Usage: /api/file-info/FILE_KEY
+/**
+ * File info endpoint - returns basic file metadata
+ * Usage: /api/file-info/FILE_KEY
+ */
 app.get("/api/file-info/:fileKey", async (req, res) => {
-  if (!currentAccessToken) {
-    return res.status(401).json({ error: "No access token available." });
-  }
+  const accessToken = requireAccessToken(req, res);
+  if (!accessToken) return;
 
   const { fileKey } = req.params;
 
   try {
     const figmaRes = await fetch(
       `https://api.figma.com/v1/files/${fileKey}?depth=1`,
-      {
-        headers: { Authorization: `Bearer ${currentAccessToken}` },
-      },
+      { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
     if (!figmaRes.ok) {
-      return res.status(500).json({ error: "Failed to fetch file info" });
+      return res
+        .status(figmaRes.status)
+        .json({ error: "Failed to fetch file info" });
     }
 
     const data = await figmaRes.json();
