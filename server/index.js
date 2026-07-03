@@ -1,62 +1,56 @@
-// Minimal Express server for the Figma Diff Tool backend.
+// Minimal Express server for the Figma Diff Tool backend
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { diff } from "./diff.js";
-import { error } from "console";
 
 // Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const IS_PROD = process.env.NODE_ENV === "production";
-const SESSION_COOKIE = "mdt_sid";
 
-// Middleware
+/**
+ * * MIDDLEWARE *
+ * No credentials/cookies needed - auth is a Bearer token in the
+ * authorization header, so a simple origin allowlist is all CORS needs
+ */
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
-    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json());
-app.use(cookieParser());
 
 // Health check route - confirms the server is running
 app.get("/", (req, res) => {
   res.json({ message: "Figma Diff Tool API is running" });
 });
 
-// *Session Storage*
-// Per-session token store. Keyed by a random session id stored in an
-// httpOnly cookie on the visitor's browser, so each visitor gets their own
-// Figma access token instead of everyone sharing one global variable.
-// NOTE: this is in-memory, so it resets on server restart (eg: Render
-// free-tier spin-down after inactivity).
-
+/**
+ * * SESSION STORAGE *
+ * Per-session token store, keyed by a random session id. The id is handed to the client once (via the
+ * OAuth redirect) and the client sends it back as a Bearer token on every request.
+ * This intentionally avoids cookies: this app's frontend (Vercel) and backend (Render) are on
+ * different domains, which makes any cookie a "third-party" cookie and Safari and Firefox block those
+ * by default (always), and Chrome blocks them by default in Incognito. A header-based token sidesteps
+ * all of that.
+ *
+ * NOTE: this is in-memory, so it resets on server restart (eg: Render free-tier spin-down after
+ * inactivity). That's an acceptable tradeoff for a demo project, not a substitute for a real session
+ * store (Redis, a DB table, etc.) in an actual production app.
+ */
 const sessions = new Map(); // sessionId -> { accessToken, obtainedAt }
 const pendingStates = new Map(); // oauth state -> sessionId (short-lived, CSRF check)
 
-function getOrCreateSessionId(req, res) {
-  let sessionId = req.cookies[SESSION_COOKIE];
-  if (!sessionId) {
-    sessionId = crypto.randomBytes(24).toString("hex");
-    res.cookie(SESSION_COOKIE, sessionId, {
-      httpOnly: true,
-      secure: IS_PROD,
-      sameSite: IS_PROD ? "none" : "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    });
-  }
-  return sessionId;
-}
-
 function requireAccessToken(req, res) {
-  const sessionId = req.cookies[SESSION_COOKIE];
-  const session = sessionId ? sessions.get(sessionId) : null;
+  const authHeader = req.headers.authorization || "";
+  const [scheme, sessionId] = authHeader.split(" ");
+
+  const session =
+    scheme === "Bearer" && sessionId ? sessions.get(sessionId) : null;
 
   if (!session) {
     res.status(401).json({
@@ -68,19 +62,21 @@ function requireAccessToken(req, res) {
   return session.accessToken;
 }
 
-// *OAuth flow*
+// *OAUTH FLOW*
 
-// Start the OAuth flow -> redirects the user to Figma's authorization page
+// Start the OAuth flow - redirects the user to Figma's authorization page
 app.get("/auth/figma", (req, res) => {
-  const sessionId = getOrCreateSessionId(req, res);
+  const sessionId = crypto.randomBytes(24).toString("hex");
 
-  // Generate a random state value to prevent CSRF attacks, tied to this
-  // specific visitor's session so the callback can't be highjacked to write
-  // a token into someone else's sessioon.
+  /**
+   * Generate a random state value to prevent CSRF attacks, tied to this specific session so the
+   * callback can't be hijacked to write a token into a different session than the one that started
+   * the flow.
+   */
   const state = crypto.randomBytes(16).toString("hex");
   pendingStates.set(state, sessionId);
 
-  // Build the Figma auth URL
+  // Build the Figma authorization URL
   const authUrl = new URL("https://www.figma.com/oauth");
   authUrl.searchParams.set("client_id", process.env.FIGMA_CLIENT_ID);
   authUrl.searchParams.set("redirect_uri", process.env.FIGMA_REDIRECT_URI);
@@ -95,7 +91,7 @@ app.get("/auth/figma", (req, res) => {
   res.redirect(authUrl.toString());
 });
 
-// OAuth callback - Figma redirects here after user aproves
+// OAuth callback - Figma redirects here after the user approves
 app.get("/auth/callback", async (req, res) => {
   const { code, state, error } = req.query;
 
@@ -104,7 +100,8 @@ app.get("/auth/callback", async (req, res) => {
     return res.status(400).json({ error: `Figma returned an error: ${error}` });
   }
 
-  // Verify the state param to prevent CSRF, and recover which session this auth belongs to
+  // Verify the state parameter to prevent CSRF, and recover which session
+  // this authorization belongs to.
   const sessionId = state ? pendingStates.get(state) : null;
   if (!state || !sessionId) {
     console.error("Invalid or missing state parameter");
@@ -112,7 +109,7 @@ app.get("/auth/callback", async (req, res) => {
   }
   pendingStates.delete(state);
 
-  // Exchange code for access token
+  // Exchange the code for an access token
   try {
     const tokenResponse = await fetch("https://api.figma.com/v1/oauth/token", {
       method: "POST",
@@ -140,27 +137,31 @@ app.get("/auth/callback", async (req, res) => {
     const tokenData = await tokenResponse.json();
     console.log("Token exchange successful. Token type:", tokenData.token_type);
 
-    // Store the token under THIS visitor's session only
+    // Store the token under THIS session only.
     sessions.set(sessionId, {
-      accessToken: tokenData.accessToken,
+      accessToken: tokenData.access_token,
       obtainedAt: Date.now(),
     });
 
-    // Redirect back to React client
-    res.redirect(`${process.env.CLIENT_URL}/paste`);
+    /**
+     * Hand the session id back to the client via the redirect URL. The client stores it
+     * (sessionStorage) and sends it as a Bearer token on every subsequent request instead of relying
+     * on cookies.
+     */
+    const redirectUrl = new URL(`${process.env.CLIENT_URL}/paste`);
+    redirectUrl.searchParams.set("session", sessionId);
+    res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Token exchange error:", err);
     res.status(500).json({ error: "Token exchange failed" });
   }
 });
 
-// --- API ENDPOINTS ----
+// *API ROUTES*
 
-/**
- * Version endpoint - fetches a Figma file's version history
- * Usage: /api/version/YOUR_FILE_KEY
- */
-app.get("api/versions/:fileKey", async (req, res) => {
+// Version endpoint - fetches a Figma file's version history
+// Usage: /api/version/YOUR_FILE_KEY
+app.get("/api/versions/:fileKey", async (req, res) => {
   const accessToken = requireAccessToken(req, res);
   if (!accessToken) return; // response already sent
 
@@ -168,7 +169,7 @@ app.get("api/versions/:fileKey", async (req, res) => {
 
   try {
     const figmaResponse = await fetch(
-      `https://api.figma.com/v1/files${fileKey}/versions`,
+      `https://api.figma.com/v1/files/${fileKey}/versions`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
@@ -176,7 +177,7 @@ app.get("api/versions/:fileKey", async (req, res) => {
       const errorText = await figmaResponse.text();
       console.error("Figma API call failed:", figmaResponse.status, errorText);
       return res.status(figmaResponse.status).json({
-        error: "figma API call failed",
+        error: "Figma API call failed",
         status: figmaResponse.status,
       });
     }
@@ -238,10 +239,8 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 });
 
-/**
- * Frame image endpoint - renders a specific Figma node as a PNG
- * Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
- */
+// Frame image endpoint - renders a specific Figma node as a PNG
+// Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
 app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   const accessToken = requireAccessToken(req, res);
   if (!accessToken) return;
@@ -274,10 +273,8 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   }
 });
 
-/**
- * File info endpoint - returns basic file metadata
- * Usage: /api/file-info/FILE_KEY
- */
+// File info endpoint - returns basic file metadata
+// Usage: /api/file-info/FILE_KEY
 app.get("/api/file-info/:fileKey", async (req, res) => {
   const accessToken = requireAccessToken(req, res);
   if (!accessToken) return;
