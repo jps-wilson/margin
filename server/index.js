@@ -2,15 +2,19 @@
 import session from "express-session";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { diff } from "./diff.js";
+import { error } from "console";
 
 // Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = process.env.NODE_ENV === "production";
+const SESSION_COOKIE = "mdt_sid";
 
 // Middleware
 app.use(
@@ -55,7 +59,11 @@ function getAccessToken(req, res) {
 }
 // Start the OAuth flow - redirects the user to Figma's authorization page
 app.get("/auth/figma", (req, res) => {
-  // Generate a random state value to prevent CSRF attacks
+  const sessionId = getOrCreateSessionId(req, res);
+
+  // Generate a random state value to prevent CSRF attacks, tied to this
+  // specific visitor's session so the callback can't be highjacked to write
+  // a token into someone else's sessioon.
   const state = crypto.randomBytes(16).toString("hex");
   oauthStates.add(state);
 
@@ -75,26 +83,24 @@ app.get("/auth/figma", (req, res) => {
   res.redirect(authUrl.toString());
 });
 
-// OAuth callback - Figma redirects here after the user approves
+// OAuth callback - Figma redirects here after user aproves
 app.get("/auth/callback", async (req, res) => {
   const { code, state, error } = req.query;
 
-  // Handle errors from Figma
   if (error) {
     console.error("Figma OAuth error:", error);
     return res.status(400).json({ error: `Figma returned an error: ${error}` });
   }
 
-  // Verify the state parameter to prevent CSRF
-  if (!state || !oauthStates.has(state)) {
+  // Verify the state param to prevent CSRF, and recover which session this auth belongs to
+  const sessionId = state ? pendingStates.get(state) : null;
+  if (!state || !sessionId) {
     console.error("Invalid or missing state parameter");
     return res.status(400).json({ error: "Invalid state parameter" });
   }
+  pendingStates.delete(state);
 
-  // State is valid - remove it from the set so it can't be reused
-  oauthStates.delete(state);
-
-  // Exchange the code for an access token
+  // Exchange code for access token
   try {
     const tokenResponse = await fetch("https://api.figma.com/v1/oauth/token", {
       method: "POST",
@@ -123,7 +129,7 @@ app.get("/auth/callback", async (req, res) => {
     console.log("Token exchange successful. Token type:", tokenData.token_type);
     req.session.figmaAccessToken = tokenData.access_token;
 
-    // Redirect back to the React client
+    // Redirect back to React client
     res.redirect(`${process.env.CLIENT_URL}/paste`);
   } catch (err) {
     console.error("Token exchange error:", err);
@@ -165,7 +171,7 @@ app.get("/api/versions/:fileKey", async (req, res) => {
       const errorText = await figmaResponse.text();
       console.error("Figma API call failed:", figmaResponse.status, errorText);
       return res.status(figmaResponse.status).json({
-        error: "Figma API call failed",
+        error: "figma API call failed",
         status: figmaResponse.status,
       });
     }
@@ -192,7 +198,6 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 
   try {
-    // Fetch both versions in parallel
     const [fromRes, toRes] = await Promise.all([
       fetch(`https://api.figma.com/v1/files/${fileKey}?version=${from}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -205,7 +210,7 @@ app.get("/api/diff/:fileKey", async (req, res) => {
     if (!fromRes.ok || !toRes.ok) {
       console.error("Figma API error:", fromRes.status, toRes.status);
       return res
-        .status(500)
+        .status(fromRes.ok ? toRes.status : fromRes.status)
         .json({ error: "Failed to fetch file versions from Figma" });
     }
 
@@ -214,7 +219,6 @@ app.get("/api/diff/:fileKey", async (req, res) => {
       toRes.json(),
     ]);
 
-    // Run the diff
     const result = diff(fromFile, toFile);
 
     res.json({
@@ -229,8 +233,10 @@ app.get("/api/diff/:fileKey", async (req, res) => {
   }
 });
 
-// Frame image endpoint — renders a specific Figma node as a PNG.
-// Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
+/**
+ * Frame image endpoint - renders a specific Figma node as a PNG
+ * Usage: /api/frame-image/FILE_KEY/NODE_ID?version=VERSION_ID
+ */
 app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   const token = getAccessToken(req, res);
   if (!token) return;
@@ -261,8 +267,10 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
   }
 });
 
-// File info endpoint - returns basic file metadata
-// Usage: /api/file-info/FILE_KEY
+/**
+ * File info endpoint - returns basic file metadata
+ * Usage: /api/file-info/FILE_KEY
+ */
 app.get("/api/file-info/:fileKey", async (req, res) => {
   const token = getAccessToken(req, res);
   if (!token) return;
@@ -295,3 +303,4 @@ app.get("/api/file-info/:fileKey", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
