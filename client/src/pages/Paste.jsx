@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { setSessionId } from "../api";
+import { useNavigate } from "react-router-dom";
 import PageShell from "../components/PageShell";
 import PageState from "../components/PageState";
 import "./Paste.css";
@@ -14,17 +13,6 @@ function Paste() {
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const pasteTimerRef = useRef(null);
-
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    const sessionId = searchParams.get("session");
-    if (sessionId) {
-      setSessionId(sessionId);
-      searchParams.delete("session");
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const DEMO_URL = "https://www.figma.com/design/abc123/File-Name";
 
