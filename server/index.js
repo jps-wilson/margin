@@ -1,4 +1,3 @@
-// Minimal Express server for the Figma Diff Tool backend.
 import session from "express-session";
 import express from "express";
 import cors from "cors";
@@ -11,11 +10,17 @@ import { RedisStore } from "connect-redis";
 // Load environment variables before anything that reads process.env
 dotenv.config();
 
+const isProd = process.env.NODE_ENV === "production";
+
 const redisClient = createClient({ url: process.env.REDIS_URL });
-redisClient.connect();
+redisClient.on("error", (err) => console.error("Redis error:", err));
+await redisClient.connect();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Required behind Render TLS proxies, or `secure` cookies never get set
+app.set("trust proxy", 1);
 
 // Middleware
 app.use(
@@ -34,8 +39,8 @@ app.use(
     saveUninitialized: false, // don't create a session until someone actually logs in
     cookie: {
       httpOnly: true, // JavaScript can't read the session cookie (safer)
-      secure: process.env.NODE_ENV === "production", // only send the cookie over HTTPS in production
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   }),
