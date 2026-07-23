@@ -8,11 +8,11 @@ import { diff } from "./diff.js";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 
+// Load environment variables before anything that reads process.env
+dotenv.config();
+
 const redisClient = createClient({ url: process.env.REDIS_URL });
 redisClient.connect();
-
-// Load environment variables from .env file
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,8 +73,12 @@ app.get("/auth/figma", (req, res) => {
   authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("response_type", "code");
 
-  // Redirect the user to Figma
-  res.redirect(authUrl.toString());
+  // Save session before redirecting — ensures oauthState is persisted before
+  // Figma bounces the user back to /auth/callback (critical for new sessions in incognito)
+  req.session.save((err) => {
+    if (err) return res.status(500).json({ error: "Session save failed" });
+    res.redirect(authUrl.toString());
+  });
 });
 
 // OAuth callback - Figma redirects here after the user approves
