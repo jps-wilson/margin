@@ -5,6 +5,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { diff } from "./diff.js";
+import { createClient } from "redis";
+import { RedisStore } from "connect-redis";
+
+const redisClient = createClient({ url: process.env.REDIS_URL });
+redisClient.connect();
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,10 +24,11 @@ app.use(
     credentials: true, // allows the browser to cookies cross-origin
   }),
 );
-app.use(express.json()); 
+app.use(express.json());
 
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false, // don't create a session until someone actually logs in
@@ -40,9 +46,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Figma Diff Tool API is running" });
 });
 
-// In-memory store for OAuth state values (temporary)
-const oauthStates = new Set();
-
 function getAccessToken(req, res) {
   const token = req.session?.figmaAccessToken;
   if (!token) {
@@ -57,8 +60,7 @@ function getAccessToken(req, res) {
 app.get("/auth/figma", (req, res) => {
   // Generate a random state value to prevent CSRF attacks
   const state = crypto.randomBytes(16).toString("hex");
-  oauthStates.add(state);
-
+  req.session.oauthState = state;
 
   // Build the Figma authorization URL
   const authUrl = new URL("https://www.figma.com/oauth");
@@ -86,13 +88,11 @@ app.get("/auth/callback", async (req, res) => {
   }
 
   // Verify the state parameter to prevent CSRF
-  if (!state || !oauthStates.has(state)) {
+  if (!state || req.session.oauthState !== state) {
     console.error("Invalid or missing state parameter");
     return res.status(400).json({ error: "Invalid state parameter" });
   }
-
-  // State is valid - remove it from the set so it can't be reused
-  oauthStates.delete(state);
+  delete req.session.oauthState;
 
   // Exchange the code for an access token
   try {
@@ -132,12 +132,12 @@ app.get("/auth/callback", async (req, res) => {
 });
 
 app.get("/auth/me", (req, res) => {
-  res.json({ authenticated: Boolean(req.session?.figmaAccessToken)});
+  res.json({ authenticated: Boolean(req.session?.figmaAccessToken) });
 });
 
 app.get("/auth/logout", (req, res) => {
   req.session.destroy((err) => {
-    if (err) return res.status(500).json({ error: "Logout failed"});
+    if (err) return res.status(500).json({ error: "Logout failed" });
     res.redirect(process.env.CLIENT_URL ?? "/");
   });
 });
@@ -148,8 +148,7 @@ app.get("/api/versions/:fileKey", async (req, res) => {
   const token = getAccessToken(req, res);
   if (!token) return;
 
-  const {fileKey} = req.params;
-
+  const { fileKey } = req.params;
 
   try {
     const figmaResponse = await fetch(
@@ -248,7 +247,9 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
     if (!figmaRes.ok) {
       const errorText = await figmaRes.text();
       console.error("Figma image API error:", figmaRes.status, errorText);
-      return res.status(figmaRes.status).json({ error: errorText, status: figmaRes.status });
+      return res
+        .status(figmaRes.status)
+        .json({ error: errorText, status: figmaRes.status });
     }
 
     const imageData = await figmaRes.json();
@@ -257,7 +258,11 @@ app.get("/api/frame-image/:fileKey/:nodeId", async (req, res) => {
     res.json({ imageUrl, status: figmaRes.status });
   } catch (err) {
     console.error("Frame image error:", err);
-    res.status(500).json({ error: "Failed to fetch frame image", status: 500, details: err.message });
+    res.status(500).json({
+      error: "Failed to fetch frame image",
+      status: 500,
+      details: err.message,
+    });
   }
 });
 
@@ -273,21 +278,27 @@ app.get("/api/file-info/:fileKey", async (req, res) => {
     const figmaRes = await fetch(
       `https://api.figma.com/v1/files/${fileKey}?depth=1`,
       {
-          headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       },
     );
 
     if (!figmaRes.ok) {
       const errorText = await figmaRes.text();
       console.error("Figma API error:", figmaRes.status, errorText);
-      return res.status(figmaRes.status).json({ error: errorText, status: figmaRes.status });
+      return res
+        .status(figmaRes.status)
+        .json({ error: errorText, status: figmaRes.status });
     }
 
     const data = await figmaRes.json();
     res.json(data);
   } catch (err) {
     console.error("File info error:", err);
-    res.status(500).json({ error: "Failed to fetch file info", status: 500, details: err.message });
+    res.status(500).json({
+      error: "Failed to fetch file info",
+      status: 500,
+      details: err.message,
+    });
   }
 });
 
