@@ -1,3 +1,4 @@
+import ProtectedRoute from "./components/ProtectedRoute";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Paste from "./pages/Paste";
@@ -10,9 +11,30 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Landing />} />
-        <Route path='/paste' element={<Paste />} />
-        <Route path='/versions/:fileKey' element={<Versions />} />
-        <Route path='/changelog/:fileKey' element={<Changelog />} />
+        <Route
+          path='/paste'
+          element={
+            <ProtectedRoute>
+              <Paste />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/versions/:fileKey'
+          element={
+            <ProtectedRoute>
+              <Versions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/changelog/:fileKey'
+          element={
+            <ProtectedRoute>
+              <Changelog />
+            </ProtectedRoute>
+          }
+        />
         <Route path='*' element={<NotFound />} />
       </Routes>
     </BrowserRouter>
