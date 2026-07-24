@@ -1,14 +1,11 @@
+import "varlock/auto-load";
 import session from "express-session";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import crypto from "crypto";
 import { diff } from "./diff.js";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
-
-// Load environment variables before anything that reads process.env
-dotenv.config();
 
 const isProd = process.env.NODE_ENV === "production";
 
