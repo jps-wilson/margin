@@ -27,6 +27,18 @@
   --change-resized-fg: #854f0b;
   --change-text-bg: #faece7;
   --change-text-fg: #993c1d;
+  --change-typography-bg: #f0ecfa;
+  --change-typography-fg: #4a2f85;
+  --change-fill-bg: #fdf0f7;
+  --change-fill-fg: #8a1f5e;
+  --change-stroke-bg: #eef1ee;
+  --change-stroke-fg: #3f4a3f;
+  --change-opacity-bg: #eef7f6;
+  --change-opacity-fg: #14554f;
+  --change-radius-bg: #f5f1e8;
+  --change-radius-fg: #6b5426;
+  --change-visibility-bg: #f2f0ec;
+  --change-visibility-fg: #5b554a;
 
   /* Typography */
   --serif: "Fraunces", Georgia, "Times New Roman", serif;

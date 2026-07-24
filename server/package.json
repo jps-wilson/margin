@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
+    "dev": "nodemon --ext js,mjs,cjs,json,schema,local index.js",
     "start": "node index.js"
   },
   "keywords": [],
@@ -13,12 +13,11 @@
   "type": "module",
   "dependencies": {
     "connect-redis": "^9.0.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "redis": "^6.1.0"
+    "redis": "^6.1.0",
+    "varlock": "^1.13.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -23,11 +23,17 @@ The application generates a scannable changelog with concrete deltas, alongside 
 - File and version selection
 - Server-side diff engine
 - Detection of:
-  - Added frames
-  - Removed frames
+  - Added elements
+  - Removed elements
   - Moved elements
   - Resized elements
   - Text content changes
+  - Fill changes (paint color/gradient)
+  - Stroke changes (color and weight)
+  - Opacity changes
+  - Typography changes (font family, weight, size, line height, letter spacing, text case)
+  - Corner radius changes
+  - Visibility changes (shown/hidden)
 - Multiple comparison views:
   - Changelog view
   - Side-by-side scrubber
@@ -35,11 +41,14 @@ The application generates a scannable changelog with concrete deltas, alongside 
 
 ## Future Improvements
 
-- Persistent session management (replace in-memory token storage)
 - Responsive mobile layout
 - Exportable diff reports (PDF/Markdown)
-- Named version filtering (surface labeled versions seperately)
 - Diff engine improvements (name-based matching for restructured files)
+
+## Completed Improvements
+
+- Persistent session management (replace in-memory token storage)
+- Named version filtering (surface labeled versions separately)
 
 ## Tech Stack
 
@@ -53,6 +62,8 @@ The application generates a scannable changelog with concrete deltas, alongside 
 
 - Node.js
 - Express
+- Redis / connect-redis (session storage)
+- Varlock (environment variable schema management)
 
 ### Authentication
 
@@ -61,15 +72,11 @@ The application generates a scannable changelog with concrete deltas, alongside 
 ### Deployment
 
 - Vercel (frontend)
-- Railway or Fly.io (backend)
+- Render (backend)
 
 ### Diffing
 
 - Custom server-side diffing logic
-
-### Database
-
-- No database required for v1
 
 ### License
 
