@@ -108,6 +108,7 @@
 .change-stat-label {
   font-size: 12px;
   color: var(--mid);
+  text-transform: capitalize;
 }
 
 .summary-stat strong,
@@ -242,6 +243,36 @@
 .change-badge--text {
   background: var(--change-text-bg);
   color: var(--change-text-fg);
+}
+
+.change-badge--typography {
+  background: var(--change-typography-bg);
+  color: var(--change-typography-fg);
+}
+
+.change-badge--fill {
+  background: var(--change-fill-bg);
+  color: var(--change-fill-fg);
+}
+
+.change-badge--stroke {
+  background: var(--change-stroke-bg);
+  color: var(--change-stroke-fg);
+}
+
+.change-badge--opacity {
+  background: var(--change-opacity-bg);
+  color: var(--change-opacity-fg);
+}
+
+.change-badge--radius {
+  background: var(--change-radius-bg);
+  color: var(--change-radius-fg);
+}
+
+.change-badge--visibility {
+  background: var(--change-visibility-bg);
+  color: var(--change-visibility-fg);
 }
 
 .change-info {

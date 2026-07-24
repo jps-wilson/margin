@@ -208,10 +208,14 @@ app.get("/api/diff/:fileKey", async (req, res) => {
     ]);
 
     if (!fromRes.ok || !toRes.ok) {
-      console.error("Figma API error:", fromRes.status, toRes.status);
-      return res
-        .status(500)
-        .json({ error: "Failed to fetch file versions from Figma" });
+      const bad = !fromRes.ok ? fromRes : toRes;
+      const body = await bad.text();
+      console.error("Figma API error:", bad.status, body.slice(0, 500));
+      return res.status(502).json({
+        error: "Failed to fetch file versions from Figma",
+        status: bad.status,
+        detail: body.slice(0, 200),
+      });
     }
 
     const [fromFile, toFile] = await Promise.all([
@@ -230,7 +234,7 @@ app.get("/api/diff/:fileKey", async (req, res) => {
     });
   } catch (err) {
     console.error("Diff error:", err);
-    res.status(500).json({ error: "Diff failed" });
+    res.status(500).json({ error: "Diff failed", detail: err.message });
   }
 });
 

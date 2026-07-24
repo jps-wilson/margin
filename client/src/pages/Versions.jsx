@@ -52,6 +52,7 @@ function Versions() {
   const [fromVersion, setFromVersion] = useState(null);
   const [toVersion, setToVersion] = useState(null);
   const [fileName, setFileName] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -70,14 +71,16 @@ function Versions() {
         setFileName(fileInfo.name);
         setVersions(versionList);
 
-        // Default selection: most recent names as "to", second named as "from"
+        // Default selection: newest named version as "to", next distinct
+        // version as "from". Falls back to the two newest versions.
         const named = versionList.filter((v) => v.label);
         if (named.length >= 2) {
           setToVersion(named[0]);
           setFromVersion(named[1]);
         } else if (named.length === 1) {
-          setToVersion(named[0]);
-          setFromVersion(versionList[1] || null);
+          const to = named[0];
+          setToVersion(to);
+          setFromVersion(versionList.find((v) => v.id !== to.id) || null);
         } else if (versionList.length >= 2) {
           setToVersion(versionList[0]);
           setFromVersion(versionList[1]);
@@ -100,6 +103,10 @@ function Versions() {
       cancelled = true;
     };
   }, [fileKey, retryCount]);
+
+  function toggleGroup(label) {
+    setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  }
 
   function handleSelect(version, type) {
     if (type === "to") {
@@ -133,8 +140,53 @@ function Versions() {
 
   function handleContinue() {
     if (!fromVersion || !toVersion) return;
-    // for now, navigate to a placeholder changelog route
     navigate(`/changelog/${fileKey}?from=${fromVersion.id}&to=${toVersion.id}`);
+  }
+
+  function renderCard(v) {
+    const isTo = toVersion && toVersion.id === v.id;
+    const isFrom = fromVersion && fromVersion.id === v.id;
+    let cardClass = "version-card";
+    if (isTo) cardClass += " version-card--to";
+    if (isFrom) cardClass += " version-card--from";
+
+    return (
+      <div className={cardClass} key={v.id} onClick={() => handleCardClick(v)}>
+        <div className='version-card-top'>
+          <span className='version-name'>
+            {v.label || formatDate(v.created_at)}
+          </span>
+          {isTo && <span className='badge badge--to'>to</span>}
+          {isFrom && <span className='badge badge--from'>from</span>}
+          {!isTo && !isFrom && (
+            <span className='version-actions'>
+              <button
+                className='select-btn'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(v, "from");
+                }}
+              >
+                from
+              </button>
+              <button
+                className='select-btn'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(v, "to");
+                }}
+              >
+                to
+              </button>
+            </span>
+          )}
+        </div>
+
+        <span className='version-sub'>
+          {formatDate(v.created_at)} · by {v.user?.handle || "Unknown"}
+        </span>
+      </div>
+    );
   }
 
   const groups = groupByWeek(versions);
@@ -191,72 +243,32 @@ function Versions() {
         </p>
 
         <div className='versions-list'>
-          {groups.map((group) => (
-            <div className='version-group' key={group.label}>
-              <span className='group-label'>{group.label}</span>
+          {groups.map((group) => {
+            const expanded = expandedGroups[group.label];
 
-              {(namedCount > 0 ? group.named : group.autoSaves).map((v) => {
-                const isTo = toVersion && toVersion.id === v.id;
-                const isFrom = fromVersion && fromVersion.id === v.id;
-                let cardClass = "version-card";
-                if (isTo) cardClass += " version-card--to";
-                if (isFrom) cardClass += " version-card--from";
+            return (
+              <div className='version-group' key={group.label}>
+                <span className='group-label'>{group.label}</span>
 
-                return (
-                  <div
-                    className={cardClass}
-                    key={v.id}
-                    onClick={() => handleCardClick(v)}
+                {group.named.map(renderCard)}
+                {expanded && group.autoSaves.map(renderCard)}
+
+                {group.autoSaves.length > 0 && (
+                  <button
+                    type='button'
+                    className='autosave-toggle'
+                    onClick={() => toggleGroup(group.label)}
                   >
-                    <div className='version-card-top'>
-                      <span className='version-name'>
-                        {v.label || formatDate(v.created_at)}
-                      </span>
-                      {isTo && <span className='badge badge--to'>to</span>}
-                      {isFrom && (
-                        <span className='badge badge--from'>from</span>
-                      )}
-                      {!isTo && !isFrom && (
-                        <span className='version-actions'>
-                          <button
-                            className='select-btn'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelect(v, "from");
-                            }}
-                          >
-                            from
-                          </button>
-                          <button
-                            className='select-btn'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelect(v, "to");
-                            }}
-                          >
-                            to
-                          </button>
-                        </span>
-                      )}
-                    </div>
-
-                    <span className='version-sub'>
-                      {formatDate(v.created_at)} · by{" "}
-                      {v.user?.handle || "Unknown"}
-                    </span>
-                  </div>
-                );
-              })}
-
-              {namedCount > 0 && group.autoSaves.length > 0 && (
-                <span className='autosave-count'>
-                  + {group.autoSaves.length} auto-save
-                  {group.autoSaves.length !== 1 ? "s" : ""}
-                  {group.label.toLowerCase()}
-                </span>
-              )}
-            </div>
-          ))}
+                    {expanded
+                      ? "hide auto-saves"
+                      : `+ ${group.autoSaves.length} auto-save${
+                          group.autoSaves.length !== 1 ? "s" : ""
+                        }`}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {fromVersion && toVersion && (

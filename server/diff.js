@@ -112,7 +112,7 @@ function compareNodes(fromMap, toMap) {
       continue;
     }
 
-    const toNode = toMap.getr(id);
+    const toNode = toMap.get(id);
     const push = (type, delta) =>
       changes.push({
         type,
