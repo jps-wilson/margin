@@ -13,6 +13,12 @@ const BADGE_LABELS = {
   moved: "moved",
   resized: "resized",
   text: "text",
+  typography: "type",
+  fill: "fill",
+  stroke: "stroke",
+  opacity: "opacity",
+  radius: "radius",
+  visibility: "visibility",
 };
 
 function Changelog() {
@@ -158,30 +164,14 @@ function Changelog() {
         </div>
 
         <div className='change-stats'>
-          <div className='change-stat'>
-            <span className='change-stat-label'>Added</span>
-            <strong>{stats.added || 0}</strong>
-          </div>
-
-          <div className='change-stat'>
-            <span className='change-stat-label'>Removed</span>
-            <strong>{stats.removed || 0}</strong>
-          </div>
-
-          <div className='change-stat'>
-            <span className='change-stat-label'>Moved</span>
-            <strong>{stats.moved || 0}</strong>
-          </div>
-
-          <div className='change-stat'>
-            <span className='change-stat-label'>Resized</span>
-            <strong>{stats.resized || 0}</strong>
-          </div>
-
-          <div className='change-stat'>
-            <span className='change-stat-label'>Text</span>
-            <strong>{stats.text || 0}</strong>
-          </div>
+          {Object.keys(BADGE_LABELS)
+            .filter((type) => stats[type])
+            .map((type) => (
+              <div className='change-stat' key={type}>
+                <span className='change-stat-label'>{BADGE_LABELS[type]}</span>
+                <strong>{stats[type]}</strong>
+              </div>
+            ))}
         </div>
 
         <div className='tab-row'>
