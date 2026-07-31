@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Required behind Render TLS proxies, or `secure` cookies never get set
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 // Middleware
 app.use(
