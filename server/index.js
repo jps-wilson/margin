@@ -7,6 +7,26 @@ import { diff } from "./diff.js";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 
+function signState(secret) {
+  const nonce = crypto.randomBytes(16).toString("hex");
+  const timestamp = Date.now();
+  const payload = `${nonce}.${timestamp}`;
+  const sig = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  return `${payload}.${sig}`;
+}
+
+function verifyState(state, secret, maxAgeMs = 5 * 60 * 1000) {
+  const [nonce, timestamp, sig] = state.split(".");
+  if (!nonce || !timestamp || !sig) return false;
+  const expectedSig = crypto
+    .createHmac("sha256", secret)
+    .update(`${nonce}.${timestamp}`)
+    .digest("hex");
+  if (sig !== expectedSig) return false;
+  if (Date.now() - Number(timestamp) > maxAgeMs) return false;
+  return true;
+}
+
 const isProd = process.env.NODE_ENV === "production";
 
 const redisClient = createClient({ url: process.env.REDIS_URL });
@@ -60,10 +80,7 @@ function getAccessToken(req, res) {
 }
 // Start the OAuth flow - redirects the user to Figma's authorization page
 app.get("/auth/figma", (req, res) => {
-  // Generate a random state value to prevent CSRF attacks
-  const state = crypto.randomBytes(16).toString("hex");
-  req.session.oauthState = state;
-
+  const state = signState(process.env.SESSION_SECRET);
   // Build the Figma authorization URL
   const authUrl = new URL("https://www.figma.com/oauth");
   authUrl.searchParams.set("client_id", process.env.FIGMA_CLIENT_ID);
@@ -75,12 +92,7 @@ app.get("/auth/figma", (req, res) => {
   authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("response_type", "code");
 
-  // Save session before redirecting — ensures oauthState is persisted before
-  // Figma bounces the user back to /auth/callback (critical for new sessions in incognito)
-  req.session.save((err) => {
-    if (err) return res.status(500).json({ error: "Session save failed" });
-    res.redirect(authUrl.toString());
-  });
+  res.redirect(authUrl.toString());
 });
 
 // OAuth callback - Figma redirects here after the user approves
@@ -94,11 +106,10 @@ app.get("/auth/callback", async (req, res) => {
   }
 
   // Verify the state parameter to prevent CSRF
-  if (!state || req.session.oauthState !== state) {
+  if (!state || !verifyState(state, process.env.SESSION_SECRET)) {
     console.error("Invalid or missing state parameter");
     return res.status(400).json({ error: "Invalid state parameter" });
   }
-  delete req.session.oauthState;
 
   // Exchange the code for an access token
   try {
