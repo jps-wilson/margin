@@ -8,26 +8,30 @@ import PageState from "./PageState";
 function ProtectedRoute({ children }) {
   const [status, setStatus] = useState("checking");
   const [searchParams, setSearchParams] = useSearchParams();
+  const authCode = searchParams.get("authCode");
 
   useEffect(() => {
     async function run() {
-      const authCode = searchParams.get("authCode");
       if (authCode) {
         const res = await fetch(`${API_BASE}/auth/finish?code=${authCode}`, {
           credentials: "include",
         });
-        searchParams.delete("authCode");
-        setSearchParams(searchParams, { replace: true });
+
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete("authCode");
+        setSearchParams(nextParams, { replace: true });
+
         if (res.ok) {
           setStatus("ok");
           return;
         }
       }
+
       const authenticated = await checkAuth();
       setStatus(authenticated ? "ok" : "unauth");
     }
     run();
-  }, []);
+  }, [authCode, searchParams, setSearchParams]);
 
   if (status === "checking") {
     return (
