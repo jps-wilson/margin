@@ -137,15 +137,33 @@ app.get("/auth/callback", async (req, res) => {
     }
 
     const tokenData = await tokenResponse.json();
-    console.log("Token exchange successful. Token type:", tokenData.token_type);
-    req.session.figmaAccessToken = tokenData.access_token;
 
-    // Redirect back to the React client
-    res.redirect(`${process.env.CLIENT_URL}/paste`);
+    // Stash the token under a one-time code instead of setting a cookie here
+    const handoffCode = crypto.randomBytes(24).toString("hex");
+    await redisClient.set(`handoff:${handoffCode}`, tokenData.access_token, {
+      EX: 60, // expires in 60 seconds – just long enough for the redirect + fetch
+    });
+
+    res.redirect(`${process.env.CLIENT_URL}/paste?authCode=${handoffCode}`);
   } catch (err) {
     console.error("Token exchange error:", err);
     res.status(500).json({ error: "Token exchange failed" });
   }
+});
+
+app.get("/auth/finish", async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).json({ error: "Missing code" });
+
+  const token = await redisClient.get(`handoff:${code}`);
+  if (!token) return res.status(400).json({ error: "Invalid or expired code" });
+
+  await redisClient.del(`handoff:${code}`);
+  req.session.figmaAccessToken = token;
+  req.session.save((err) => {
+    if (err) return res.status(500).json({ error: "Session save failed" });
+    res.json({ authenticated: true });
+  });
 });
 
 app.get("/auth/me", (req, res) => {
