@@ -19,7 +19,7 @@ The application generates a scannable changelog with concrete deltas, alongside 
 
 ### Core Features
 
-- Figma OAuth authentication
+- Figma OAuth authentication with CSRF-protected, signed state and one-time token handoff
 - File and version selection
 - Server-side diff engine
 - Detection of:
@@ -49,6 +49,7 @@ The application generates a scannable changelog with concrete deltas, alongside 
 
 - Persistent session management (replace in-memory token storage)
 - Named version filtering (surface labeled versions separately)
+- CSRF-protected OAuth flow (signed state parameter + one-time handoff code for token exchange)
 
 ## Tech Stack
 
